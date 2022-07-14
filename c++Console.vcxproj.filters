@@ -24,7 +24,7 @@
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ListenerTest.cpp">
+    <ClCompile Include="Listener.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

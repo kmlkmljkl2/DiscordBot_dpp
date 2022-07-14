@@ -3,11 +3,11 @@
 #include "curl.h"
 #include "nlohmann/json.hpp"
 #include <dpp/dpp.h>
-#include "LoadBalancing-cpp/inc/Client.h"
+#include "Client.h"
 #include "Common-cpp/inc/Common.h"
-#include "LoadBalancing-cpp/inc/AuthenticationValues.h"
-#include"LoadBalancing-cpp/inc/Enums/ServerType.h"
-#include "ListenerTest.cpp"
+#include "AuthenticationValues.h"
+#include "Enums/ServerType.h"
+#include "Listener.cpp"
 
 using json = nlohmann::json;
 //for (auto& el1 : j["results"][0]["media"][0]["gif"]["url"].items())
@@ -70,13 +70,12 @@ public:
 		const dpp::guild* g = dpp::find_guild(event.msg.guild_id);
 		if (g)
 		{
-		    ListenerTest listener();
-
-			ExitGames::LoadBalancing::Client client();
+			const Listener test();
+			ExitGames::LoadBalancing::Client client(test, "", "");
 			ExitGames::LoadBalancing::ConnectOptions test(ExitGames::LoadBalancing::AuthenticationValues(), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 		
 	
-			client().connect(test);
+			client.connect(test);
 		}
 	}
 

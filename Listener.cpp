@@ -1,9 +1,9 @@
-#include "LoadBalancing-cpp/inc/Listener.h"
+#include "Listener.h"
 #include "Common.h"
 #include "Player.h"
-
 using namespace ExitGames;
-class ListenerTest : ExitGames::LoadBalancing::Listener
+
+class Listener : ExitGames::LoadBalancing::Listener
 {
 	// Inherited via Listener
 	virtual void debugReturn(int debugLevel, const Common::JString& string) override
@@ -17,6 +17,7 @@ class ListenerTest : ExitGames::LoadBalancing::Listener
 	}
 	virtual void warningReturn(int warningCode) override
 	{
+		
 	}
 	virtual void serverErrorReturn(int errorCode) override
 	{
