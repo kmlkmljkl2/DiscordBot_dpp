@@ -99,12 +99,12 @@ public:
 			LoadBalancing::Room *room = getBot().Client.getRoomList()[i];
 			
 			//List += room->getName();
-			List << room->getName().cstr() << "\n";
+			List << room->getName().UTF8Representation().cstr() << "\n";
 		
 		}
 
 		std::cout << "Current Room: " << getBot().Client.getCurrentlyJoinedRoom().getName() << std::endl;
-		event.reply(List.str());
+		event.reply("```" + List.str() + "```");
 	}
 	static void Join(const dpp::message_create_t& event)
 	{
