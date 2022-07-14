@@ -9,7 +9,7 @@
 #include "CommandHandler.cpp"
 #define _CRT_SECURE_NO_WARNINGS
 
-const std::string Token = "";
+const std::string Token = "OTUzMTA3MTY4MDkyMTI3MjMz.Gkbq6x.qEhHumlKsGs4RxCoCLLFubnURxG2x9iux40PvA";
 
 void onMessage_Event(const dpp::message_create_t& event) {
     if (event.msg.author.is_bot()) return;

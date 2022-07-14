@@ -8,6 +8,7 @@
 #include "AuthenticationValues.h"
 #include "Enums/ServerType.h"
 #include "Listener.cpp"
+#include "PhotonListener.h"
 
 using json = nlohmann::json;
 //for (auto& el1 : j["results"][0]["media"][0]["gif"]["url"].items())
@@ -67,16 +68,16 @@ public:
 
 	static void Test(const dpp::message_create_t& event)
 	{
-		const dpp::guild* g = dpp::find_guild(event.msg.guild_id);
-		if (g)
+			ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues(), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+			PhotonListener t("");
+	}
+	static void Disconnect(const dpp::message_create_t& event)
+	{
+		/*for (int i = 0; Bots.size() > i; i++)
 		{
-			const Listener test();
-			ExitGames::LoadBalancing::Client client(test, "", "");
-			ExitGames::LoadBalancing::ConnectOptions test(ExitGames::LoadBalancing::AuthenticationValues(), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
-		
-	
-			client.connect(test);
-		}
+			Bots[i].Client.disconnect();
+			event.reply("Disconnected");
+		}*/
 	}
 
 	//"https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 10))
