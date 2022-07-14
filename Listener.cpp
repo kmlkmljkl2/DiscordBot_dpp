@@ -1,10 +1,21 @@
 #include "Listener.h"
 #include "Common.h"
 #include "Player.h"
+#include "Client.h"
 using namespace ExitGames;
 
 class Listener : ExitGames::LoadBalancing::Listener
 {
+	
+
+public:
+	ExitGames::LoadBalancing::Client Client;
+
+	Listener(std::string test) : Client(*this, "", "")
+	{
+
+	}
+
 	// Inherited via Listener
 	virtual void debugReturn(int debugLevel, const Common::JString& string) override
 	{
@@ -41,4 +52,5 @@ class Listener : ExitGames::LoadBalancing::Listener
 	virtual void leaveRoomReturn(int errorCode, const Common::JString& errorString) override
 	{
 	}
+	
 };
