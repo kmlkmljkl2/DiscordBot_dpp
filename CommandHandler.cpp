@@ -65,19 +65,51 @@ static class CommandHandler
 	}
 
 public:
+	static PhotonListener& getBot()
+	{
+		static PhotonListener test("");
+		return test;
+	}
 
 	static void Test(const dpp::message_create_t& event)
 	{
 			ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues(), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
-			PhotonListener t("");
+			getBot().Client.connect(options);
+			
+			std::cout << getBot().Client.getRoomList().getSize() << std::endl;
 	}
 	static void Disconnect(const dpp::message_create_t& event)
 	{
+		std::cout << getBot().Client.getRoomList().getSize() << std::endl;
 		/*for (int i = 0; Bots.size() > i; i++)
 		{
 			Bots[i].Client.disconnect();
 			event.reply("Disconnected");
 		}*/
+		//getBot().Client.disconnect();
+		//std::cout << getBot().Client.getState() << std::endl;
+	}
+
+	static void List(const dpp::message_create_t& event)
+	{
+		std::stringstream List;
+
+		for (int i = 0; getBot().Client.getRoomList().getSize() > i; i++)
+		{
+			LoadBalancing::Room *room = getBot().Client.getRoomList()[i];
+			
+			//List += room->getName();
+			List << room->getName().cstr() << "\n";
+		
+		}
+
+		std::cout << "Current Room: " << getBot().Client.getCurrentlyJoinedRoom().getName() << std::endl;
+		event.reply(List.str());
+	}
+	static void Join(const dpp::message_create_t& event)
+	{
+		//getBot().Client.opJoinRoom(getBot().Client.getRoomList()[0]->getName(), true);
+		getBot().Client.opJoinRandomRoom();
 	}
 
 	//"https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 10))
@@ -107,3 +139,6 @@ public:
 	}
 	
 };
+
+
+

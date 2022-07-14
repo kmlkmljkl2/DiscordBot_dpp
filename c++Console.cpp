@@ -7,9 +7,10 @@
 #include <dpp/dpp.h>
 #include "Logger.cpp"
 #include "CommandHandler.cpp"
+#include <fstream>
 #define _CRT_SECURE_NO_WARNINGS
 
-const std::string Token = "OTUzMTA3MTY4MDkyMTI3MjMz.Gkbq6x.qEhHumlKsGs4RxCoCLLFubnURxG2x9iux40PvA";
+static std::string Token = "";
 
 void onMessage_Event(const dpp::message_create_t& event) {
     if (event.msg.author.is_bot()) return;
@@ -29,9 +30,17 @@ void onMessage_Event(const dpp::message_create_t& event) {
     {
         CommandHandler::Ahegao(event);
     }
-    else if (cmd == "test")
+    else if (cmd == "dc")
     {
-
+        CommandHandler::Disconnect(event);
+    }
+    else if (cmd == "l")
+    {
+        CommandHandler::List(event);
+    }
+    else if (cmd == "j")
+    {
+        CommandHandler::Join(event);
     }
     else
     {
@@ -49,8 +58,15 @@ void onMessage_Event(const dpp::message_create_t& event) {
 
 int main()
 {
-  /*  CommandHandler::Meow();
-    return 0;*/
+    std::string test;
+    std::ifstream myfile;
+    myfile.open("C:/Users/kevin/source/repos/c++Console/Discord.txt");
+    if (myfile.is_open())
+    {
+        std::getline(myfile, test);
+        Token = test;
+
+    }
     Logger::LogDebug("Starting");
 
     dpp::cluster bot(Token, dpp::intents::i_default_intents | dpp::intents::i_message_content | dpp::intents::i_direct_messages | dpp::intents::i_guild_emojis | dpp::intents::i_guild_message_reactions);

@@ -184,7 +184,6 @@
   <ItemGroup>
     <ClCompile Include="c++Console.cpp" />
     <ClCompile Include="CommandHandler.cpp" />
-    <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="PhotonListener.cpp" />
   </ItemGroup>

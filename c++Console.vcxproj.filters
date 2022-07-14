@@ -24,9 +24,6 @@
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Listener.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PhotonListener.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
