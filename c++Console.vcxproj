@@ -142,7 +142,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libdpp-10.0.12-win64\lib\dpp-10.0;$(SolutionDir)curl-7.84.0\builds\libcurl-vc17-x64-debug-static-ipv6-sspi-schannel\lib;$(SolutionDir)Common-cpp\lib;$(SolutionDir)LoadBalancing-cpp\lib;$(SolutionDir)Photon-cpp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>dpp.lib;libcurl_a_debug.lib;Normaliz.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Photon-cpp_vc16_debug_windows_md_x64.lib;LoadBalancing-cpp_debug_windows_md_x64.lib;Common-cpp_vc16_debug_windows_md_x64.lib</AdditionalDependencies>
+      <AdditionalDependencies>dpp.lib;libcurl_a_debug.lib;Normaliz.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;LoadBalancing-cpp_debug_windows_md_x64.lib;Photon-cpp_vc16_debug_windows_md_x64.lib;LoadBalancing-cpp_debug_windows_md_x64.lib;Common-cpp_vc16_debug_windows_md_x64.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -170,7 +170,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)libdpp-10.0.12-win64\lib\dpp-10.0;$(SolutionDir)curl-7.84.0\builds\libcurl-vc17-x64-debug-static-ipv6-sspi-schannel\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>dpp.lib;libcurl_a_debug.lib;Normaliz.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>dpp.lib;libcurl_a_debug.lib;Normaliz.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;LoadBalancing-cpp_debug_windows_md_x64.lib;</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -191,7 +191,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PhotonListener.h" />
+    <ClInclude Include="NotPhotonListener.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

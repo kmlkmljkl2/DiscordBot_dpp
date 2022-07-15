@@ -148,9 +148,9 @@ namespace ExitGames
 			virtual Internal::MutableRoomFactory* getMutableRoomFactory(void) const;
 
 			// From Photon::PhotonListener
+			virtual void onEvent(const Photon::EventData& eventData);
 			virtual void onOperationResponse(const Photon::OperationResponse& operationResponse);
 			virtual void onStatusChanged(int statusCode);
-			virtual void onEvent(const Photon::EventData& eventData);
 			virtual void onPingResponse(const Common::JString& address, unsigned int result);
 			virtual void debugReturn(int debugLevel, const Common::JString& string);
 		private:

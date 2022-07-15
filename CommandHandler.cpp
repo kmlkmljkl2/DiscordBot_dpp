@@ -8,7 +8,7 @@
 #include "AuthenticationValues.h"
 #include "Enums/ServerType.h"
 #include "Listener.cpp"
-#include "PhotonListener.h"
+#include "NotPhotonListener.h"
 
 using json = nlohmann::json;
 //for (auto& el1 : j["results"][0]["media"][0]["gif"]["url"].items())
@@ -65,28 +65,30 @@ static class CommandHandler
 	}
 
 public:
-	static PhotonListener& getBot()
+	static NotPhotonListener& getBot()
 	{
-		static PhotonListener test("");
+		static NotPhotonListener test("");
 		return test;
 	}
 
-	static void Test(const dpp::message_create_t& event)
+	static void Start(const dpp::message_create_t& event)
 	{
-			ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues(), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setData("cunt"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+		
 			getBot().Client.connect(options);
-			
-			std::cout << getBot().Client.getRoomList().getSize() << std::endl;
+
+		getBot().Client.getLocalPlayer().addCustomProperty("name", "crustycunt");
+		//std::cout << getBot().Client.getRoomList().getSize() << std::endl;
 	}
 	static void Disconnect(const dpp::message_create_t& event)
 	{
-		std::cout << getBot().Client.getRoomList().getSize() << std::endl;
+		//std::cout << getBot().Client.getRoomList().getSize() << std::endl;
 		/*for (int i = 0; Bots.size() > i; i++)
 		{
 			Bots[i].Client.disconnect();
 			event.reply("Disconnected");
 		}*/
-		//getBot().Client.disconnect();
+		getBot().Client.disconnect();
 		//std::cout << getBot().Client.getState() << std::endl;
 	}
 
@@ -96,22 +98,44 @@ public:
 
 		for (int i = 0; getBot().Client.getRoomList().getSize() > i; i++)
 		{
-			LoadBalancing::Room *room = getBot().Client.getRoomList()[i];
-			
+			LoadBalancing::Room* room = getBot().Client.getRoomList()[i];
+
 			//List += room->getName();
 			List << room->getName().UTF8Representation().cstr() << "\n";
-		
 		}
 
-		std::cout << "Current Room: " << getBot().Client.getCurrentlyJoinedRoom().getName() << std::endl;
 		event.reply("```" + List.str() + "```");
 	}
 	static void Join(const dpp::message_create_t& event)
 	{
 		//getBot().Client.opJoinRoom(getBot().Client.getRoomList()[0]->getName(), true);
-		getBot().Client.opJoinRandomRoom();
-	}
+		LoadBalancing::Room* Target = NULL;
+		for (int i = 0; getBot().Client.getRoomList().getSize() > i; i++)
+		{
+			LoadBalancing::Room* room = getBot().Client.getRoomList()[i];
 
+			if (room->getName().UTF8Representation().toString().startsWith("[000000]>>))"))
+			{
+				Target = room;
+			}
+		}
+		
+		if (Target != NULL)
+		{
+			std::cout << "joining" << std::endl;
+			getBot().Client.opJoinRoom(Target->getName());
+		}
+		
+		//getBot().Client.opJoinRandomRoom();
+		
+	}
+	static void CurrentRoom(const dpp::message_create_t& event)
+	{
+		std::cout << "Current Room: " << getBot().Client.getCurrentlyJoinedRoom().getName().UTF8Representation().cstr() << std::endl;
+		auto& test = getBot().Client.getMasterserverAddress();
+		
+		std::cout << test.UTF8Representation().cstr() << std::endl;
+	}
 	//"https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 10))
 
 	static void Meow(const dpp::message_create_t& event)
@@ -131,14 +155,9 @@ public:
 
 		std::string response_string = GetResponse(Url);
 		json j = json::parse(response_string);
-		
+
 		std::string result;
 		result = j["results"][0]["media"][0]["gif"]["url"];
 		event.send(result);
-		
 	}
-	
 };
-
-
-

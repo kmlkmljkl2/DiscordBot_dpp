@@ -8,6 +8,7 @@
 #include "Logger.cpp"
 #include "CommandHandler.cpp"
 #include <fstream>
+#include <JString.h>
 #define _CRT_SECURE_NO_WARNINGS
 
 static std::string Token = "";
@@ -18,9 +19,9 @@ void onMessage_Event(const dpp::message_create_t& event) {
   
     std::string cmd = event.msg.content.substr(1, event.msg.content.find_first_of(' ') - 1);
     
-    if (cmd == "test")
+    if (cmd == "s" || cmd == "start")
     {
-        CommandHandler::Test(event);
+        CommandHandler::Start(event);
     }
     else if (cmd == "meow")
     {
@@ -38,19 +39,18 @@ void onMessage_Event(const dpp::message_create_t& event) {
     {
         CommandHandler::List(event);
     }
-    else if (cmd == "j")
+    else if (cmd == "j" || cmd == "join")
     {
         CommandHandler::Join(event);
+    }
+    else if (cmd == "currentroom")
+    {
+        CommandHandler::CurrentRoom(event);
     }
     else
     {
         return;
     }
-
-
-
-
-
     Logger::LogDebug("Executed command: " + cmd);
 
 };
@@ -58,6 +58,21 @@ void onMessage_Event(const dpp::message_create_t& event) {
 
 int main()
 {
+ /*  ExitGames::Common::JString MasterServer = "192.168.2.221:5055";
+   ExitGames::Common::JString GasterServer = "127.0.0.1:5058";
+   
+
+   auto MasterServerip = MasterServer.UTF8Representation().toString().substring(0, MasterServer.length() - 4).cstr();
+
+   GasterServer = MasterServerip + GasterServer.substring(GasterServer.length() - 4, GasterServer.length());
+
+   std::cout << MasterServer.UTF8Representation().cstr() <<  " " << GasterServer.UTF8Representation().cstr() << std::endl;
+*/
+
+
+
+
+  //  return 0;
     std::string test;
     std::ifstream myfile;
     myfile.open("C:/Users/kevin/source/repos/c++Console/Discord.txt");
