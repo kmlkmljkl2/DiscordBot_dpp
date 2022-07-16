@@ -9,6 +9,8 @@
 #include "Enums/ServerType.h"
 #include "Listener.cpp"
 #include "NotPhotonListener.h"
+#include <regex>
+#include "Helpers.cpp"
 
 using json = nlohmann::json;
 //for (auto& el1 : j["results"][0]["media"][0]["gif"]["url"].items())
@@ -74,11 +76,8 @@ public:
 	static void Start(const dpp::message_create_t& event)
 	{
 		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setData("cunt"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
-		
-			getBot().Client.connect(options);
-
+		getBot().Client.connect(options);
 		getBot().Client.getLocalPlayer().addCustomProperty("name", "crustycunt");
-		//std::cout << getBot().Client.getRoomList().getSize() << std::endl;
 	}
 	static void Disconnect(const dpp::message_create_t& event)
 	{
@@ -99,23 +98,28 @@ public:
 		for (int i = 0; getBot().Client.getRoomList().getSize() > i; i++)
 		{
 			LoadBalancing::Room* room = getBot().Client.getRoomList()[i];
-
+			std::string name = room->getName().UTF8Representation().cstr();
 			//List += room->getName();
-			List << room->getName().UTF8Representation().cstr() << "\n";
+			auto test = std::regex_replace(name, std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
+			List << test << "\n";
 		}
 
 		event.reply("```" + List.str() + "```");
 	}
-	static void Join(const dpp::message_create_t& event)
+	static void Join(const dpp::message_create_t& event, std::string args)
 	{
+		args = args.substr(1);
+		
 		//getBot().Client.opJoinRoom(getBot().Client.getRoomList()[0]->getName(), true);
 		LoadBalancing::Room* Target = NULL;
 		for (int i = 0; getBot().Client.getRoomList().getSize() > i; i++)
 		{
 			LoadBalancing::Room* room = getBot().Client.getRoomList()[i];
+			std::string Name = Helpers::ToLower(std::regex_replace(room->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""));
 
-			if (room->getName().UTF8Representation().toString().startsWith("[000000]>>))"))
+			if (Name.find(args) != std::string::npos)
 			{
+				std::cout << "Found something" << std::endl;
 				Target = room;
 			}
 		}

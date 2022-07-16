@@ -18,7 +18,11 @@ void onMessage_Event(const dpp::message_create_t& event) {
     if (!event.msg.content._Starts_with("-")) return;
   
     std::string cmd = event.msg.content.substr(1, event.msg.content.find_first_of(' ') - 1);
-    
+    std::string EventArgs = event.msg.content.substr(event.msg.content.find_first_of(cmd) + cmd.length());
+    /*if (event.msg.content.find(' '))
+    {
+       EventArgs = event.msg.content.substr(event.msg.content.find_first_of(' ') - 1, event.msg.content.length());
+    }*/
     if (cmd == "s" || cmd == "start")
     {
         CommandHandler::Start(event);
@@ -41,7 +45,7 @@ void onMessage_Event(const dpp::message_create_t& event) {
     }
     else if (cmd == "j" || cmd == "join")
     {
-        CommandHandler::Join(event);
+        CommandHandler::Join(event, EventArgs);
     }
     else if (cmd == "currentroom")
     {
@@ -58,28 +62,25 @@ void onMessage_Event(const dpp::message_create_t& event) {
 
 int main()
 {
- /*  ExitGames::Common::JString MasterServer = "192.168.2.221:5055";
-   ExitGames::Common::JString GasterServer = "127.0.0.1:5058";
-   
+    //std::string name = "[000000]>>))  [bb0000]B[c30000]l[cc0000]o[d40000]o[dd0000]d [e50000]F[ee0000]o[f60000]r [ff0000]T[ff0000]h[f70000]e [f00000]B[e80000]l[e00000]o[d90000]o[d10000]d [ca0000]G[c20000]o[bb0000]d[bb0000]";
+    //try {
+    //    //"\[a-zA-Z0-9\]{6}"
+    //std::string test2 = std::regex_replace(name, std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
+    //std::cout << test2 << std::endl;
 
-   auto MasterServerip = MasterServer.UTF8Representation().toString().substring(0, MasterServer.length() - 4).cstr();
+    //}
+    //catch (std::exception const& e) {
+    //    std::cerr << e.what() << std::endl;
+    //}
 
-   GasterServer = MasterServerip + GasterServer.substring(GasterServer.length() - 4, GasterServer.length());
-
-   std::cout << MasterServer.UTF8Representation().cstr() <<  " " << GasterServer.UTF8Representation().cstr() << std::endl;
-*/
-
-
-
-
-  //  return 0;
-    std::string test;
+    //return 0;
+    std::string Tokenstring;
     std::ifstream myfile;
     myfile.open("C:/Users/kevin/source/repos/c++Console/Discord.txt");
     if (myfile.is_open())
     {
-        std::getline(myfile, test);
-        Token = test;
+        std::getline(myfile, Tokenstring);
+        Token = Tokenstring;
 
     }
     Logger::LogDebug("Starting");

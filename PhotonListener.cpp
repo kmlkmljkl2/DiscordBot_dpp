@@ -21,13 +21,6 @@ NotPhotonListener::~NotPhotonListener()
 	KeepRunning = false;
 }
 
-void NotPhotonListener::ConnectTest(void)
-{
-	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues(), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
-
-	Client.connect(options);
-}
-
 void NotPhotonListener::debugReturn(int debugLevel, const Common::JString& string)
 {
 	std::cout << "DebugReturn: " << debugLevel << " " << string.UTF8Representation().cstr() << std::endl;
@@ -63,9 +56,10 @@ void NotPhotonListener::leaveRoomEventAction(int playerNr, bool isInactive)
 	std::cout << "Player " << playerNr << " left" << std::endl;
 }
 
+//InRoom Events
 void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const Common::Object& eventContent)
 {
-	std::cout << "CustomEventAction" << std::endl;
+	//std::cout << "CustomEventAction" << std::endl;
 }
 
 void NotPhotonListener::connectReturn(int errorCode, const Common::JString& errorString, const Common::JString& region, const Common::JString& cluster)
@@ -77,7 +71,7 @@ void NotPhotonListener::connectReturn(int errorCode, const Common::JString& erro
 		//std::cout << ExitGames::Common::DebugLevel::ERRORS, L"error code: %d   error message: %ls", errorCode, errorString.cstr();
 		return;
 	}
-	std::cout << ExitGames::Common::DebugLevel::INFO +  L" connected to cluster " << cluster.UTF8Representation().cstr() << L" of region " << region.UTF8Representation().cstr() << L", user id = " + Client.getUserID() << std::endl;
+	std::cout <<  " connected to cluster \"" << cluster.UTF8Representation().cstr() << "\" of region \"" << region.UTF8Representation().cstr() << "\", user id = " << Client.getUserID().UTF8Representation().cstr() << std::endl;
 
 }
 
