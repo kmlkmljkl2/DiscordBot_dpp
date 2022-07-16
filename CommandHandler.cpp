@@ -12,6 +12,7 @@
 #include <regex>
 #include "Helpers.cpp"
 
+
 using json = nlohmann::json;
 //for (auto& el1 : j["results"][0]["media"][0]["gif"]["url"].items())
 			  //{
@@ -90,7 +91,6 @@ public:
 		getBot().Client.disconnect();
 		//std::cout << getBot().Client.getState() << std::endl;
 	}
-
 	static void List(const dpp::message_create_t& event)
 	{
 		std::stringstream List;
@@ -101,7 +101,13 @@ public:
 			std::string name = room->getName().UTF8Representation().cstr();
 			//List += room->getName();
 			auto test = std::regex_replace(name, std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
-			List << test << "\n";
+
+			auto splitted = Helpers::Split(test, '`');
+
+			//auto e = room->getPlayerCount() + "\\" + room->getMaxPlayers();
+			auto Data = splitted[0] + std::string(50 - splitted[0].length(), ' ') + splitted[1] + std::string(22 - splitted[1].length(), ' ') /*+ e*/;
+
+			List << Data << "\n";
 		}
 
 		event.reply("```" + List.str() + "```");
@@ -126,6 +132,7 @@ public:
 		
 		if (Target != NULL)
 		{
+			
 			std::cout << "joining" << std::endl;
 			getBot().Client.opJoinRoom(Target->getName());
 		}
