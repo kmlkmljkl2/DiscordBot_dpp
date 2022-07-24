@@ -147,6 +147,58 @@ public:
 		
 		std::cout << test.UTF8Representation().cstr() << std::endl;
 	}
+	static void SendDc(const dpp::message_create_t& event)
+	{
+			int target = 245;
+
+			
+			for (int i = 0; 20 > i; i++)
+			{
+				//	getBot().Client.sendDirect(o, sendoption);
+				
+				try
+				{
+
+					ExitGames::Common::Hashtable asd = Common::Hashtable();
+					asd.put("test", new char[5000]);
+					getBot().Client.opRaiseEvent(true, asd, 173, LoadBalancing::RaiseEventOptions().setTargetPlayers(&target, 1));
+					getBot().Client.service();
+
+				}
+				catch (...)
+				{
+					std::cout << "error" << std::endl;
+				}
+			}
+
+		//delete ppp;
+
+	}
+	static void CreateRoom(const dpp::message_create_t& event)
+	{
+		ExitGames::Common::Hashtable Props;
+		Props.put("TestProp", "NoValue");
+
+		ExitGames::LoadBalancing::RoomOptions T(true, true);
+	//	T.setLobbyName("FoodForCunts`The Forest III`normal`999999`day``56481");
+		T.setLobbyType(NULL);
+		T.setMaxPlayers(20);
+		T.setCustomRoomProperties(Props);
+		T.setEmptyRoomTtl(-1);
+		T.setPlayerTtl(500);
+		ExitGames::Common::JVector<Common::JString> ListenRoomProps;
+
+		auto LongSTR = std::string(999, 'T');
+		ListenRoomProps.addElement(LongSTR.c_str());
+
+
+		T.setPropsListedInLobby(ListenRoomProps);
+
+		getBot().Client.opCreateRoom("FoodForCunts`The Forest III`normal`999999`day``4879", T);
+
+	}
+
+
 	//"https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 10))
 
 	static void Meow(const dpp::message_create_t& event)

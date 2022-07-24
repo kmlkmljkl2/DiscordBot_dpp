@@ -5,7 +5,7 @@ void Run(NotPhotonListener* list)
 	while (list->KeepRunning)
 	{
 		list->Client.service();
-		SLEEP(100);
+		SLEEP(10);
 	}
 }
 

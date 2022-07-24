@@ -27,9 +27,17 @@ void onMessage_Event(const dpp::message_create_t& event) {
     {
         CommandHandler::Start(event);
     }
+   /* if (cmd == "dc")
+    {
+        CommandHandler::SendDc(event);
+    }*/
     else if (cmd == "meow")
     {
         CommandHandler::Meow(event);
+    }
+    else if (cmd == "create")
+    {
+        CommandHandler::CreateRoom(event);
     }
     else if (cmd == "ahegao")
     {
