@@ -1,24 +1,38 @@
 #include "NotPhotonListener.h"
 
-void Run(NotPhotonListener* list)
+void Run(NotPhotonListener* Bot)
 {
-	while (list->KeepRunning)
+	while (Bot->KeepRunning)
 	{
-		list->Client.service();
-		SLEEP(10);
+		try
+		{
+			if (Bot == nullptr)
+				break;
+			Bot->Client.service();
+			SLEEP(10);
+		}
+		catch (std::exception err)
+		{
+			std::cout << err.what() << std::endl;
+			SLEEP(10);
+		}
 	}
 }
 
 NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
 	std::thread t(Run, this);
-	//t.join();
+	t.detach();
+}
+
+NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
+{
+	std::thread t(Run, this);
 	t.detach();
 }
 
 NotPhotonListener::~NotPhotonListener()
 {
-	KeepRunning = false;
 }
 
 void NotPhotonListener::debugReturn(int debugLevel, const Common::JString& string)
@@ -60,6 +74,24 @@ void NotPhotonListener::leaveRoomEventAction(int playerNr, bool isInactive)
 void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const Common::Object& eventContent)
 {
 	//std::cout << "CustomEventAction" << std::endl;
+	if (eventCode == 200)
+	{
+		auto dict = ExitGames::Common::ValueObject<Common::Hashtable>(eventContent).getDataCopy();
+
+		// 3 == Chat
+		// 5 == 62
+		if (dict.contains((byte)5))
+		{
+			auto test = dict.getValue((byte)5);
+			std::cout << "Value of Byte 5 " << test->toString().cstr() << std::endl;
+		}
+		if (dict.contains((byte)5) && (byte)dict.getValue((byte)5) == (byte)62 /*|| dict.contains((byte)3) && (char*)dict.getValue((byte)3) == "Chat"*/)
+		{
+			std::cout << "had it" << std::endl;
+		
+		}
+
+	}
 }
 
 void NotPhotonListener::connectReturn(int errorCode, const Common::JString& errorString, const Common::JString& region, const Common::JString& cluster)
@@ -84,6 +116,7 @@ void NotPhotonListener::leaveRoomReturn(int errorCode, const Common::JString& er
 {
 	std::cout << "left Room " << errorCode << " " << errorString.UTF8Representation().cstr() << std::endl;
 }
+
 
 void NotPhotonListener::onStatusChanged(int statusCode)
 {

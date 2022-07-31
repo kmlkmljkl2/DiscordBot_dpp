@@ -2,18 +2,20 @@
 #include "Listener.h"
 #include <Client.h>
 #include <OperationResponse.h>
+#include <iostream>
+#include <Listener.h>
 
 using namespace ExitGames;
 class NotPhotonListener : private ExitGames::LoadBalancing::Listener
 {
 public:
 	NotPhotonListener(std::string str);
+	NotPhotonListener(const NotPhotonListener& old);
 	~NotPhotonListener();
-	void ConnectTest(void);
 	LoadBalancing::Client Client;
 	bool KeepRunning = true;
-
-
+	long long ChannelId;
+	long long CreatorId;
 private:
 
 	// Inherited via Listener
@@ -28,7 +30,7 @@ private:
 	virtual void connectReturn(int errorCode, const Common::JString& errorString, const Common::JString& region, const Common::JString& cluster) override;
 	virtual void disconnectReturn(void) override;
 	virtual void leaveRoomReturn(int errorCode, const Common::JString& errorString) override;
-	
+
 
 	
 

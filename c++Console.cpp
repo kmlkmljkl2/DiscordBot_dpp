@@ -1,21 +1,49 @@
 // c++Console.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
-
-
+#pragma once
 #include <iostream>
+
 #include <dpp/dpp.h>
 #include "Logger.cpp"
 #include "CommandHandler.cpp"
 #include <fstream>
 #include <JString.h>
+#include "DiscordBotStuff.cpp"
 #define _CRT_SECURE_NO_WARNINGS
 
-static std::string Token = "";
+
 
 void onMessage_Event(const dpp::message_create_t& event) {
     if (event.msg.author.is_bot()) return;
-    if (!event.msg.content._Starts_with("-")) return;
+    if (!event.msg.content._Starts_with("-"))
+    {
+      
+		//for (int i = 0; CommandHandler::StoreVector.size() > i; i++)
+		//{
+		//	auto Bot = CommandHandler::StoreVector[i];
+  //          if (Bot->ChannelId == event.msg.channel_id)
+  //          {
+  //              ExitGames::Common::Hashtable data = ExitGames::Common::Hashtable();
+  //              data.put((byte)0, 2); // view ID
+  //              data.put((byte)2, Bot->Client.getServerTime()); // Server Time
+  //              data.put((byte)3, "Chat"); // RPC Name
+
+
+  //              const char* test[] = {event.msg.content.c_str(), event.msg.author.username.c_str()};
+
+  //              data.put((byte)4, test);
+
+
+  //              //data.put((byte));
+
+
+  //              Bot->Client.opRaiseEvent(true, data, 200, ExitGames::LoadBalancing::RaiseEventOptions());
+  //          }
+
+		//}
+
+        return;
+    }
   
     std::string cmd = event.msg.content.substr(1, event.msg.content.find_first_of(' ') - 1);
     std::string EventArgs = event.msg.content.substr(event.msg.content.find_first_of(cmd) + cmd.length());
@@ -27,10 +55,10 @@ void onMessage_Event(const dpp::message_create_t& event) {
     {
         CommandHandler::Start(event);
     }
-   /* if (cmd == "dc")
+    if (cmd == "test")
     {
-        CommandHandler::SendDc(event);
-    }*/
+        CommandHandler::Test(event);
+    }
     else if (cmd == "meow")
     {
         CommandHandler::Meow(event);
@@ -55,9 +83,9 @@ void onMessage_Event(const dpp::message_create_t& event) {
     {
         CommandHandler::Join(event, EventArgs);
     }
-    else if (cmd == "currentroom")
+    else if (cmd == "debug")
     {
-        CommandHandler::CurrentRoom(event);
+        CommandHandler::Debug(event);
     }
     else
     {
@@ -66,7 +94,6 @@ void onMessage_Event(const dpp::message_create_t& event) {
     Logger::LogDebug("Executed command: " + cmd);
 
 };
-
 
 int main()
 {
@@ -82,37 +109,15 @@ int main()
     //}
 
     //return 0;
-    std::string Tokenstring;
-    std::ifstream myfile;
-    myfile.open("C:/Users/kevin/source/repos/c++Console/Discord.txt");
-    if (myfile.is_open())
-    {
-        std::getline(myfile, Tokenstring);
-        Token = Tokenstring;
+    DiscordBotStuff::Init();
 
-    }
+
     Logger::LogDebug("Starting");
+    DiscordBot.on_log(dpp::utility::cout_logger());
 
-    dpp::cluster bot(Token, dpp::intents::i_default_intents | dpp::intents::i_message_content | dpp::intents::i_direct_messages | dpp::intents::i_guild_emojis | dpp::intents::i_guild_message_reactions);
-   
-    bot.on_log(dpp::utility::cout_logger());
+    DiscordBot.on_message_create.attach(onMessage_Event);
 
-    bot.on_slashcommand([](const dpp::slashcommand_t& event) {
-        if (event.command.get_command_name() == "ping") {
-            event.reply("Pong!");
-        }
-        });
-
-
-    bot.on_ready([&bot](const dpp::ready_t& event) {
-        if (dpp::run_once<struct register_bot_commands>()) {
-            bot.global_command_create(dpp::slashcommand("ping", "Ping pong!", bot.me.id));
-        }
-        });
-
-    bot.on_message_create.attach(onMessage_Event);
-
-    bot.start(false);
+    DiscordBot.start(false);
     
 }
 
