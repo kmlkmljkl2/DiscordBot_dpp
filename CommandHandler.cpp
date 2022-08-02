@@ -168,7 +168,7 @@ public:
 		if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
 		{
 			event.reply("Failed to join Server, try again");
-			Debug(event);
+			//Debug(event);
 			Disconnect(event);
 			return;
 		}
@@ -256,39 +256,23 @@ public:
 		return test;
 	}*/
 
-	static void Test(const dpp::message_create_t& event)
+	static void Test(/*const dpp::message_create_t& event*/)
 	{
-		
-		//auto Bot = new NotPhotonListener("");
-		//StoreVector.push_back(Bot);
-		//std::cout << StoreVector.size() << std::endl;
+	/*	auto TheGreatHashtable = Common::Hashtable();
+		TheGreatHashtable.put((byte)5, (byte)77);
+		TheGreatHashtable.put((byte)6, (byte)78);
+
+		auto Text = "test";
+
+		TheGreatHashtable.put((byte)3, Text);
+		auto value2 = Common::ValueObject<byte>(TheGreatHashtable.getValue((byte)5)).getDataAddress();
 
 
-		//ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setData("cunt"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
-		//Bot->Client.connect(options);
-		//Bot->Client.getLocalPlayer().addCustomProperty("name", "crustycunt");
-		////Bot.ChannelId = event.msg.channel_id;
-		//SLEEP(1000);
 
-		//std::stringstream List;
+		auto s = TheGreatHashtable.getValue((byte)3)->toString().cstr();
+		auto value = Common::ValueObject<const EG_CHAR>(TheGreatHashtable.getValue((byte)3)).getDataAddress();
 
-		//for (int i = 0; getBot().Client.getRoomList().getSize() > i; i++)
-		//{
-		//	LoadBalancing::Room* room = getBot().Client.getRoomList()[i];
-		//	std::string name = room->getName().UTF8Representation().cstr();
-		//	//List += room->getName();
-		//	auto test = std::regex_replace(name, std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
-
-		//	auto splitted = Helpers::Split(test, '`');
-
-		//	//auto e = room->getPlayerCount() + "\\" + room->getMaxPlayers();
-		//	auto Data = splitted[0] + std::string(50 - splitted[0].length(), ' ') + splitted[1] + std::string(22 - splitted[1].length(), ' ') /*+ e*/;
-
-		//	List << Data << "\n";
-		//}
-
-		//event.reply("```" + List.str() + "```");
-
+		std::cout << "Value: " << value->cstr() << std::endl;*/
 
 	}
 	static void SendDc(const dpp::message_create_t& event)

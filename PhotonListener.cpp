@@ -1,4 +1,6 @@
 #include "NotPhotonListener.h"
+#include <iostream>
+#include <vector>
 
 void Run(NotPhotonListener* Bot)
 {
@@ -73,22 +75,59 @@ void NotPhotonListener::leaveRoomEventAction(int playerNr, bool isInactive)
 //InRoom Events
 void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const Common::Object& eventContent)
 {
-	//std::cout << "CustomEventAction" << std::endl;
 	if (eventCode == 200)
 	{
-		auto dict = ExitGames::Common::ValueObject<Common::Hashtable>(eventContent).getDataCopy();
+		auto hash = ExitGames::Common::ValueObject<Common::Hashtable>(eventContent).getDataCopy();
 
+		//auto intte = ValueObject<int>(playerProperties.getKeys()[i]).getDataCopy() :targetPlayerNr
 		// 3 == Chat
 		// 5 == 62
-		if (dict.contains((byte)5))
-		{
-			auto test = dict.getValue((byte)5);
-			std::cout << "Value of Byte 5 " << test->toString().cstr() << std::endl;
-		}
-		if (dict.contains((byte)5) && (byte)dict.getValue((byte)5) == (byte)62 /*|| dict.contains((byte)3) && (char*)dict.getValue((byte)3) == "Chat"*/)
-		{
-			std::cout << "had it" << std::endl;
+
+
+
 		
+		if (hash.contains((byte)5) || hash.contains((byte)3))
+		{
+			byte three = 3;
+			auto value = Common::ValueObject<byte>(hash.getValue((byte)5)).getDataCopy();
+
+			
+
+			if (value == (byte)62)
+			{
+				std::cout << "Received Chat Event" << std::endl;
+			}
+			
+			if (hash.contains(three))
+			{
+				Common::Object* RPCName = hash.getValue(three);
+				auto res = (std::string)RPCName->toString().UTF8Representation().cstr();
+				//std::cout << res << std::endl;
+
+
+
+				if (res == "\"Chat\"")
+				{
+					std::cout << "Alternate received Chat Event" << std::endl;
+
+					auto args = hash.getValue((byte)4);
+
+					auto test = (Common::JVector<char*>)args->toString()[0];
+
+					//std::cout << test[0] << std::endl;
+					std::cout << test.getSize() << std::endl;
+
+					std::cout << args[0].toString().UTF8Representation().cstr() << std::endl;
+
+
+				}
+			
+
+
+			}
+
+			
+
 		}
 
 	}

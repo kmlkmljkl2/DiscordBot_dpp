@@ -57,7 +57,7 @@ void onMessage_Event(const dpp::message_create_t& event) {
     }
     if (cmd == "test")
     {
-        CommandHandler::Test(event);
+       // CommandHandler::Test(event);
     }
     else if (cmd == "meow")
     {
@@ -97,18 +97,8 @@ void onMessage_Event(const dpp::message_create_t& event) {
 
 int main()
 {
-    //std::string name = "[000000]>>))  [bb0000]B[c30000]l[cc0000]o[d40000]o[dd0000]d [e50000]F[ee0000]o[f60000]r [ff0000]T[ff0000]h[f70000]e [f00000]B[e80000]l[e00000]o[d90000]o[d10000]d [ca0000]G[c20000]o[bb0000]d[bb0000]";
-    //try {
-    //    //"\[a-zA-Z0-9\]{6}"
-    //std::string test2 = std::regex_replace(name, std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
-    //std::cout << test2 << std::endl;
-
-    //}
-    //catch (std::exception const& e) {
-    //    std::cerr << e.what() << std::endl;
-    //}
-
-    //return 0;
+    //CommandHandler::Test();
+   // return 0;
     DiscordBotStuff::Init();
 
 
