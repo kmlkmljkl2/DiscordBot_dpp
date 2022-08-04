@@ -1,6 +1,10 @@
 #include "NotPhotonListener.h"
 #include <iostream>
 #include <vector>
+#include "Helpers.cpp"
+#include <dpp/dpp.h>
+#include "DiscordBotStuff.cpp"
+#include "Logger.cpp"
 
 void Run(NotPhotonListener* Bot)
 {
@@ -77,59 +81,57 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 {
 	if (eventCode == 200)
 	{
+		byte three = 3;
+
 		auto hash = ExitGames::Common::ValueObject<Common::Hashtable>(eventContent).getDataCopy();
 
 		//auto intte = ValueObject<int>(playerProperties.getKeys()[i]).getDataCopy() :targetPlayerNr
 		// 3 == Chat
 		// 5 == 62
+	
 
-
-
-		
-		if (hash.contains((byte)5) || hash.contains((byte)3))
-		{
-			byte three = 3;
-			auto value = Common::ValueObject<byte>(hash.getValue((byte)5)).getDataCopy();
-
-			
-
-			if (value == (byte)62)
+			if (hash.contains((byte)5) || hash.contains(three))
 			{
-				std::cout << "Received Chat Event" << std::endl;
-			}
-			
-			if (hash.contains(three))
-			{
+				auto value = Common::ValueObject<byte>(hash.getValue((byte)5)).getDataCopy();
 				Common::Object* RPCName = hash.getValue(three);
-				auto res = (std::string)RPCName->toString().UTF8Representation().cstr();
-				//std::cout << res << std::endl;
+				std::string res;
+				if (RPCName)
+					res = (std::string)RPCName->toString().UTF8Representation().cstr();
 
 
-
-				if (res == "\"Chat\"")
+				if (value == (byte)62 || res == "\"Chat\"")
 				{
-					std::cout << "Alternate received Chat Event" << std::endl;
+					auto args = Common::ValueObject<Common::Object*>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
 
-					auto args = hash.getValue((byte)4);
+					if (args == nullptr) return;
 
-					auto test = (Common::JVector<char*>)args->toString()[0];
+					auto content = (std::string)args[0].toString().UTF8Representation().cstr();
+					auto sender = (std::string)args[1].toString().UTF8Representation().cstr();
 
-					//std::cout << test[0] << std::endl;
-					std::cout << test.getSize() << std::endl;
+					std::cout << args << std::endl;
+					std::cout << args << std::endl;
 
-					std::cout << args[0].toString().UTF8Representation().cstr() << std::endl;
+					if (sender == "\"\"")
+					{
+						sender = "";
+					}
+					else
+					{
+						sender.pop_back();
+						sender += ": ";
+						sender = sender.substr(1);
+					}
+					content = content.substr(1);
+					content.pop_back();
 
+					dpp::message msg(this->ChannelId, sender + content);
+					msg.set_guild_id(this->GuildId);
+					//	DiscordBotStuff::SendMsg(msg);
 
+					std::cout << sender << content << std::endl;
 				}
-			
-
 
 			}
-
-			
-
-		}
-
 	}
 }
 

@@ -139,7 +139,7 @@ public:
 		{
 			if (OldBot->CreatorId == (long long)event.msg.author.id);
 			{
-			//	std::cout << "Old Size "  << StoreVector.size() << std::endl;
+				//	std::cout << "Old Size "  << StoreVector.size() << std::endl;
 				remove(StoreVector.begin(), StoreVector.end(), OldBot);
 				//std::cout << "Removed Bot " << StoreVector.size() << std::endl;
 
@@ -148,18 +148,15 @@ public:
 				RemoveBot(OldBot);
 				goto Continue;
 			}
-				event.reply("Active Bot in Channel");
-				return;
-			
-			
+			event.reply("Active Bot in Channel");
+			return;
 		}
 		Continue:
 		NotPhotonListener* Bot = new NotPhotonListener("");
 		Bot->CreatorId = event.msg.author.id;
+
+		Bot->GuildId = event.msg.guild_id;
 		Bot->ChannelId = event.msg.channel_id;
-		//DiscordBot.message_create(dpp::message(event.msg.channel_id, "test"));
-
-
 		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("crustycunt"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 		Bot->Client.connect(options);
 		Bot->Client.getLocalPlayer().addCustomProperty("name", "crustycunt");
@@ -256,23 +253,15 @@ public:
 		return test;
 	}*/
 
-	static void Test(/*const dpp::message_create_t& event*/)
+	static void Test(const dpp::message_create_t& event)
 	{
-	/*	auto TheGreatHashtable = Common::Hashtable();
-		TheGreatHashtable.put((byte)5, (byte)77);
-		TheGreatHashtable.put((byte)6, (byte)78);
+		dpp::message msg(event.msg.channel_id, "test");
+		msg.set_guild_id(event.msg.guild_id);
 
-		auto Text = "test";
+		DiscordBotStuff::SendMsg(msg);
 
-		TheGreatHashtable.put((byte)3, Text);
-		auto value2 = Common::ValueObject<byte>(TheGreatHashtable.getValue((byte)5)).getDataAddress();
+	//	DiscordBot.message_create_sync(msg);
 
-
-
-		auto s = TheGreatHashtable.getValue((byte)3)->toString().cstr();
-		auto value = Common::ValueObject<const EG_CHAR>(TheGreatHashtable.getValue((byte)3)).getDataAddress();
-
-		std::cout << "Value: " << value->cstr() << std::endl;*/
 
 	}
 	static void SendDc(const dpp::message_create_t& event)

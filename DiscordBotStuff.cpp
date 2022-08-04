@@ -27,6 +27,11 @@ public:
             std::getline(myfile, Tokenstring); // gets first line
             Token = Tokenstring;
         }
-        DiscordBot.token = Token;
+		DiscordBot.token = Token;
+	}
+	static void SendMsg(const dpp::message msg)
+	{
+		DiscordBot.message_create_sync(msg);
     }
+
 };

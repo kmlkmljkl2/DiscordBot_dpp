@@ -57,7 +57,7 @@ void onMessage_Event(const dpp::message_create_t& event) {
     }
     if (cmd == "test")
     {
-       // CommandHandler::Test(event);
+        CommandHandler::Test(event);
     }
     else if (cmd == "meow")
     {
@@ -108,6 +108,17 @@ int main()
     DiscordBot.on_message_create.attach(onMessage_Event);
 
     DiscordBot.start(false);
+
+    SLEEP(5000);
+
+    dpp::message msg(990980366313607178, "test");
+    msg.set_guild_id(847366584053661726);
+
+    DiscordBotStuff::SendMsg(msg);
+    while (true)
+    {
+        std::cin;
+    }
     
 }
 

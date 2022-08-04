@@ -14,8 +14,9 @@ public:
 	~NotPhotonListener();
 	LoadBalancing::Client Client;
 	bool KeepRunning = true;
-	long long ChannelId;
-	long long CreatorId;
+	uint64_t ChannelId;
+	uint64_t CreatorId;
+	uint64_t GuildId;
 private:
 
 	// Inherited via Listener
