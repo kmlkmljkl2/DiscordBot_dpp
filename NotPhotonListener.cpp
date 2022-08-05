@@ -5,6 +5,7 @@
 #include <dpp/dpp.h>
 #include "DiscordBotStuff.cpp"
 #include "Logger.cpp"
+#include <regex>
 
 void Run(NotPhotonListener* Bot)
 {
@@ -85,53 +86,44 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 
 		auto hash = ExitGames::Common::ValueObject<Common::Hashtable>(eventContent).getDataCopy();
 
-		//auto intte = ValueObject<int>(playerProperties.getKeys()[i]).getDataCopy() :targetPlayerNr
 		// 3 == Chat
 		// 5 == 62
-	
 
-			if (hash.contains((byte)5) || hash.contains(three))
+		if (hash.contains((byte)5) || hash.contains(three))
+		{
+			auto value = Common::ValueObject<byte>(hash.getValue((byte)5)).getDataCopy();
+			Common::Object* RPCName = hash.getValue(three);
+			std::string res;
+			if (RPCName)
+				res = (std::string)RPCName->toString().UTF8Representation().cstr();
+
+			if (value == (byte)62 || res == "\"Chat\"")
 			{
-				auto value = Common::ValueObject<byte>(hash.getValue((byte)5)).getDataCopy();
-				Common::Object* RPCName = hash.getValue(three);
-				std::string res;
-				if (RPCName)
-					res = (std::string)RPCName->toString().UTF8Representation().cstr();
+				auto args = Common::ValueObject<Common::Object*>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
 
+				if (args == nullptr) return;
 
-				if (value == (byte)62 || res == "\"Chat\"")
+				auto content = (std::string)args[0].toString().UTF8Representation().cstr();
+				auto sender = (std::string)args[1].toString().UTF8Representation().cstr();
+
+				if (sender == "\"\"")
 				{
-					auto args = Common::ValueObject<Common::Object*>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
-
-					if (args == nullptr) return;
-
-					auto content = (std::string)args[0].toString().UTF8Representation().cstr();
-					auto sender = (std::string)args[1].toString().UTF8Representation().cstr();
-
-					std::cout << args << std::endl;
-					std::cout << args << std::endl;
-
-					if (sender == "\"\"")
-					{
-						sender = "";
-					}
-					else
-					{
-						sender.pop_back();
-						sender += ": ";
-						sender = sender.substr(1);
-					}
-					content = content.substr(1);
-					content.pop_back();
-
-					dpp::message msg(this->ChannelId, sender + content);
-					msg.set_guild_id(this->GuildId);
-					//	DiscordBotStuff::SendMsg(msg);
-
-					std::cout << sender << content << std::endl;
+					sender = "";
 				}
+				else
+				{
+					sender.pop_back();
+					sender += ": ";
+					sender = sender.substr(1);
+				}
+				content = content.substr(1);
+				content.pop_back();
 
+				dpp::message msg(this->ChannelId, std::regex_replace(sender + content, std::regex(std::string(R"(<[^>]*>)")), ""));
+				msg.set_guild_id(this->GuildId);
+				DiscordBotStuff::SendMsg(msg);
 			}
+		}
 	}
 }
 
@@ -144,8 +136,7 @@ void NotPhotonListener::connectReturn(int errorCode, const Common::JString& erro
 		//std::cout << ExitGames::Common::DebugLevel::ERRORS, L"error code: %d   error message: %ls", errorCode, errorString.cstr();
 		return;
 	}
-	std::cout <<  " connected to cluster \"" << cluster.UTF8Representation().cstr() << "\" of region \"" << region.UTF8Representation().cstr() << "\", user id = " << Client.getUserID().UTF8Representation().cstr() << std::endl;
-
+	std::cout << " connected to cluster \"" << cluster.UTF8Representation().cstr() << "\" of region \"" << region.UTF8Representation().cstr() << "\", user id = " << Client.getUserID().UTF8Representation().cstr() << std::endl;
 }
 
 void NotPhotonListener::disconnectReturn(void)
@@ -158,9 +149,7 @@ void NotPhotonListener::leaveRoomReturn(int errorCode, const Common::JString& er
 	std::cout << "left Room " << errorCode << " " << errorString.UTF8Representation().cstr() << std::endl;
 }
 
-
 void NotPhotonListener::onStatusChanged(int statusCode)
 {
 	std::cout << "called" << std::endl;
 }
-

@@ -4,8 +4,6 @@
 #include <vector>
 #include <sstream>
 
-
-
 static class Helpers
 {
 public:

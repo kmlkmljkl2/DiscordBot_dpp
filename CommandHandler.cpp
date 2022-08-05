@@ -1,5 +1,3 @@
-
-
 #include <dpp/dispatcher.h>
 #include <iostream>
 #include "curl.h"
@@ -17,29 +15,6 @@
 
 using namespace dpp;
 using json = nlohmann::json;
-//for (auto& el1 : j["results"][0]["media"][0]["gif"]["url"].items())
-			  //{
-			  //   // std::cout << el1.key() << '\n';
-			  //    std::cout << el1.key() << ": " << el1.value() << std::endl;
-
-			  //    for (auto& el2 : el1.value())
-			  //    {
-			  //        //here
-			  //        for (auto& el3 : el2.items())
-			  //        {
-			  //           // std::cout << el3.value() << '\n';
-
-			  //            for (auto& el : el3.value())
-			  //            {
-			  //                //no longer able to filter
-			  //               // std::cout << el.dump() << '\n';
-
-			  //            }
-
-			  //        }
-
-			  //    }
-			  //}
 
 static class CommandHandler
 {
@@ -117,7 +92,7 @@ static class CommandHandler
 		{
 			if (StoreVector[i] == OldBot)
 			{
-			//	std::cout << "removed a Bot from the Vector" << std::endl;
+				//	std::cout << "removed a Bot from the Vector" << std::endl;
 				StoreVector.erase(StoreVector.begin() + i);
 			}
 		}
@@ -151,15 +126,15 @@ public:
 			event.reply("Active Bot in Channel");
 			return;
 		}
-		Continue:
+	Continue:
 		NotPhotonListener* Bot = new NotPhotonListener("");
 		Bot->CreatorId = event.msg.author.id;
 
 		Bot->GuildId = event.msg.guild_id;
 		Bot->ChannelId = event.msg.channel_id;
-		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("crustycunt"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 		Bot->Client.connect(options);
-		Bot->Client.getLocalPlayer().addCustomProperty("name", "crustycunt");
+		Bot->Client.getLocalPlayer().addCustomProperty("name", "notsocrusty");
 		StoreVector.push_back(Bot);
 		SLEEP(600);
 		if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
@@ -170,9 +145,7 @@ public:
 			return;
 		}
 
-
 		List(event);
-		
 	}
 	static void Disconnect(const dpp::message_create_t& event)
 	{
@@ -184,7 +157,6 @@ public:
 		Bot->~NotPhotonListener();
 		RemoveBot(Bot);
 		event.send("Disconnected");
-
 	}
 	static void List(const dpp::message_create_t& event)
 	{
@@ -225,7 +197,7 @@ public:
 				break;
 			}
 		}
-		
+
 		if (Target != NULL)
 		{
 			std::cout << "joining" << std::endl;
@@ -238,10 +210,10 @@ public:
 		if (Bot == nullptr) return;
 		std::stringstream List;
 		auto te = ClientStates[Bot->Client.getState()];
-	//	auto test = ExitGames::LoadBalancing::PeerStates::(8);
+		//	auto test = ExitGames::LoadBalancing::PeerStates::(8);
 		List << "```\nCreator:		" << Bot->CreatorId << "\n";
 		List << "Channel:			" << Bot->ChannelId << "\n";
-		List << "State:				" << te << "\n";
+		List << "State:				" << te << " " + std::to_string(Bot->Client.getState()) << "\n";
 		List << "Ping:				" << Bot->Client.getRoundTripTime() << "\n";
 		List << "Ping variance:		" << Bot->Client.getRoundTripTimeVariance() << "```";
 
@@ -255,45 +227,11 @@ public:
 
 	static void Test(const dpp::message_create_t& event)
 	{
-		dpp::message msg(event.msg.channel_id, "test");
+		/*dpp::message msg(event.msg.channel_id, "test");
 		msg.set_guild_id(event.msg.guild_id);
-
-		DiscordBotStuff::SendMsg(msg);
-
-	//	DiscordBot.message_create_sync(msg);
-
-
+		DiscordBotStuff::SendMsg(msg);*/
 	}
-	static void SendDc(const dpp::message_create_t& event)
-	{
-		auto Bot = GetBot(event);
-		if (Bot == nullptr) return;
 
-			int target = 245;
-
-			
-			for (int i = 0; 20 > i; i++)
-			{
-				//	getBot().Client.sendDirect(o, sendoption);
-				
-				try
-				{
-
-					ExitGames::Common::Hashtable asd = Common::Hashtable();
-					asd.put("test", new char[5000]);
-					Bot->Client.opRaiseEvent(true, asd, 173, LoadBalancing::RaiseEventOptions().setTargetPlayers(&target, 1));
-					Bot->Client.service();
-
-				}
-				catch (...)
-				{
-					std::cout << "error" << std::endl;
-				}
-			}
-
-		//delete ppp;
-
-	}
 	static void CreateRoom(const dpp::message_create_t& event)
 	{
 		auto Bot = GetBot(event);
@@ -313,13 +251,10 @@ public:
 		auto LongSTR = std::string(999, 'T');
 		ListenRoomProps.addElement(LongSTR.c_str());
 
-
 		T.setPropsListedInLobby(ListenRoomProps);
 
 		Bot->Client.opCreateRoom("FoodForCunts`The Forest III`normal`999999`day``4879", T);
-
 	}
-
 
 	//"https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 10))
 

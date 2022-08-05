@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <ctime>
 
-
 static class Logger
 {
 	static std::string GetTime()

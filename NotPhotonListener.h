@@ -32,15 +32,5 @@ private:
 	virtual void disconnectReturn(void) override;
 	virtual void leaveRoomReturn(int errorCode, const Common::JString& errorString) override;
 
-
-	
-
 	virtual void onStatusChanged(int statusCode);
-
-
-	
-
 };
-
-
-
