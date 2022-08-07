@@ -174,6 +174,7 @@ public:
 		Bot->Client.getLocalPlayer().addCustomProperty("deaths", -1);
 		Bot->Client.getLocalPlayer().addCustomProperty("max_dmg", 420);
 		Bot->Client.getLocalPlayer().addCustomProperty("total_dmg", 420);
+		Bot->Client.getLocalPlayer().addCustomProperty("NoodleDoodle", "Im a Discord Bot");
 
 
 
@@ -266,8 +267,10 @@ public:
 			auto player = Bot->Client.getCurrentlyJoinedRoom().getPlayers()[i];
 			auto props = player->getCustomProperties();
 
-			List += player->getIsMasterClient() ? "[M]" : "[P]";
-			if (props.contains("isTitan"))
+
+			List += props.contains("NoodleDoodle") ? "[B]" : player->getIsMasterClient() ? "[M]" : "[P]";
+
+			 if (props.contains("isTitan"))
 			{
 				bool IsTitan = Common::ValueObject<int>(props.getValue("isTitan")).getDataCopy() == 2;
 				List += IsTitan ? "[T]" : "[H]";
@@ -280,7 +283,7 @@ public:
 			List += " [";
 			auto BiggestId = std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayers().getLastElement()->getNumber());
 
-			List += std::string("0", BiggestId.size() - std::to_string(player->getNumber()).size());
+			List += std::string(BiggestId.size() - std::to_string(player->getNumber()).size(), '0');
 			List += std::to_string(player->getNumber()) + "] ";
 
 			std::string Name;
@@ -293,10 +296,10 @@ public:
 			{
 				Name = "Nameless";
 			}
-			if (Name.size() > 17)
-				Name.erase(17, Name.size());
+			if (Name.size() > 20)
+				Name.erase(20, Name.size());
 
-			List += Name + std::string(" ", 23 - Name.size());
+			List += Name + std::string(23 - Name.size(), ' ');
 
 			std::string Stats;
 			if (props.contains("kills"))
@@ -305,7 +308,7 @@ public:
 			}
 			else
 			{
-				Stats += "1-1/";
+				Stats += "-1/";
 			}
 			if (props.contains("deaths"))
 			{
@@ -313,7 +316,7 @@ public:
 			}
 			else
 			{
-				Stats += "2-1/";
+				Stats += "-1/";
 			}
 			if (props.contains("max_dmg"))
 			{
@@ -321,7 +324,7 @@ public:
 			}
 			else
 			{
-				Stats += "3-1/";
+				Stats += "-1/";
 			}
 			if (props.contains("total_dmg"))
 			{
@@ -329,10 +332,10 @@ public:
 			}
 			else
 			{
-				Stats += "4-1";
+				Stats += "-1";
 			}
 
-			List += Stats + std::string(" ", 20 - Stats.size());
+			List += Stats + std::string(20 - Stats.size(), ' ');
 
 			if (props.contains("dead"))
 			{
@@ -345,7 +348,7 @@ public:
 			}
 
 			List += "\n";
-			std::cout << List << std::endl;
+			//std::cout << List << std::endl;
 		}
 		List += "```";
 		Bot->Chat += List;
