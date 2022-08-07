@@ -28,27 +28,5 @@ public:
 		}
 		return seglist;
 	}
-	static std::vector<std::string> PhotonEventToArray(std::string str)
-	{
-		std::string segment;
-		std::vector<std::string> seglist;
-		std::stringstream test(str);
 
-		while (std::getline(test, segment, ','))
-		{
-			if (segment._Starts_with("[\""))
-			{
-				segment = segment.substr(2);
-				segment.pop_back();
-			}
-			if (segment._Starts_with(" \""))
-			{
-				segment = segment.substr(2);
-				segment.pop_back();
-				segment.pop_back();
-			}
-			seglist.push_back(segment);
-		}
-		return seglist;
-	}
 };

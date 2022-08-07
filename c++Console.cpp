@@ -25,7 +25,7 @@ void onMessage_Event(const dpp::message_create_t& event) {
 				data.put((byte)2, Bot->Client.getServerTime()); // Server Time
 
 				//Having both byte 3 and byte 5 set makes MC auto-ban you
-				data.put<byte, std::string>(3, "Chat"); // RPC Name
+				data.put<byte, char[5]>(3, "Chat"); // RPC Name
 
 				ExitGames::Common::JString args[2];
 				args[0] = ExitGames::Common::JString(event.msg.content.c_str());
@@ -78,6 +78,10 @@ void onMessage_Event(const dpp::message_create_t& event) {
 	{
 		CommandHandler::Debug(event);
 	}
+	else if (cmd == "p" || cmd == "playerlist")
+	{
+		CommandHandler::PlayerList(event);
+	}
 	else
 	{
 		return;
@@ -88,7 +92,7 @@ void onMessage_Event(const dpp::message_create_t& event) {
 int main()
 {
 	DiscordBotStuff::Init();
-
+	CommandHandler::Init();
 	Logger::LogDebug("Starting");
 	DiscordBot.on_log(dpp::utility::cout_logger());
 

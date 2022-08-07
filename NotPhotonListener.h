@@ -17,6 +17,7 @@ public:
 	uint64_t ChannelId;
 	uint64_t CreatorId;
 	uint64_t GuildId;
+	std::string Chat;
 private:
 
 	// Inherited via Listener
@@ -31,6 +32,7 @@ private:
 	virtual void connectReturn(int errorCode, const Common::JString& errorString, const Common::JString& region, const Common::JString& cluster) override;
 	virtual void disconnectReturn(void) override;
 	virtual void leaveRoomReturn(int errorCode, const Common::JString& errorString) override;
+	virtual void onMasterClientChanged(int id, int oldID) override;
 
 	virtual void onStatusChanged(int statusCode);
 };

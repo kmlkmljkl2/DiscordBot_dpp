@@ -18,6 +18,8 @@ using json = nlohmann::json;
 
 static class CommandHandler
 {
+	//static std::thread ChatHandler;
+
 	inline static const std::vector<std::string> ClientStates
 	{
 		"Uninitialized",
@@ -72,13 +74,19 @@ static class CommandHandler
 		return "";
 	}
 
-	static NotPhotonListener* GetBot(const dpp::message_create_t& event)
+	static NotPhotonListener* GetBot(const dpp::message_create_t& event, bool OwnerOnly = false)
 	{
 		for (int i = 0; StoreVector.size() > i; i++)
 		{
 			auto BotChannelId = StoreVector[i]->ChannelId;
 			auto ChannelId = event.msg.channel_id;
-			if (BotChannelId == ChannelId)
+			if (BotChannelId != ChannelId) continue;
+
+			if (!OwnerOnly)
+			{
+				return StoreVector[i];
+			}
+			if (StoreVector[i]->CreatorId == event.msg.author.id)
 			{
 				return StoreVector[i];
 			}
@@ -98,6 +106,28 @@ static class CommandHandler
 		}
 	}
 
+	static void HandleChat()
+	{
+		while (true)
+		{
+			for (int i = 0; CommandHandler::StoreVector.size() > i; i++)
+			{
+				auto Bot = CommandHandler::StoreVector[i];
+				if (Bot->Client.getState() != 15 || Bot->Chat == "") continue;
+
+				if (Bot->Chat.size() > 2000)
+					Bot->Chat = "Message was over 2k Characters, it got ate";
+
+
+				dpp::message msg(Bot->ChannelId, Bot->Chat);
+				msg.set_guild_id(Bot->GuildId);
+				Bot->Chat = "";
+				DiscordBotStuff::SendMsg(msg);
+
+			}
+			std::this_thread::sleep_for(std::chrono::microseconds(1500));
+		}
+	}
 public:
 	inline static std::vector<NotPhotonListener*> StoreVector = std::vector<NotPhotonListener*>();
 
@@ -106,18 +136,20 @@ public:
 		static NotPhotonListener test("");
 		return test;
 	}*/
+	static void Init()
+	{
+		std::thread t(HandleChat);
+		t.detach();
+	}
 
 	static void Start(const dpp::message_create_t& event)
 	{
 		auto OldBot = GetBot(event);
 		if (OldBot != nullptr)
 		{
-			if (OldBot->CreatorId == (long long)event.msg.author.id);
+			if (OldBot->CreatorId == event.msg.author.id && OldBot->Client.getState() != 15); // If creator called -s again and bot is not inside a Room
 			{
-				//	std::cout << "Old Size "  << StoreVector.size() << std::endl;
-				remove(StoreVector.begin(), StoreVector.end(), OldBot);
-				//std::cout << "Removed Bot " << StoreVector.size() << std::endl;
-
+				//remove(StoreVector.begin(), StoreVector.end(), OldBot);
 				OldBot->KeepRunning = false;
 				OldBot->~NotPhotonListener();
 				RemoveBot(OldBot);
@@ -134,7 +166,18 @@ public:
 		Bot->ChannelId = event.msg.channel_id;
 		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "cunt", "135.125.239.180", ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 		Bot->Client.connect(options);
-		Bot->Client.getLocalPlayer().addCustomProperty("name", "notsocrusty");
+
+		std::cout << Bot << std::endl;
+		Bot->Client.getLocalPlayer().addCustomProperty("name", "NoodleDoodleTesting");
+		Bot->Client.getLocalPlayer().addCustomProperty("dead", true);
+		Bot->Client.getLocalPlayer().addCustomProperty("kills", 69);
+		Bot->Client.getLocalPlayer().addCustomProperty("deaths", -1);
+		Bot->Client.getLocalPlayer().addCustomProperty("max_dmg", 420);
+		Bot->Client.getLocalPlayer().addCustomProperty("total_dmg", 420);
+
+
+
+
 		StoreVector.push_back(Bot);
 		SLEEP(600);
 		if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
@@ -149,13 +192,15 @@ public:
 	}
 	static void Disconnect(const dpp::message_create_t& event)
 	{
-		auto Bot = GetBot(event);
+		auto Bot = GetBot(event, true);
 		if (Bot == nullptr) return;
 
 		Bot->Client.disconnect();
 		Bot->KeepRunning = false;
 		Bot->~NotPhotonListener();
 		RemoveBot(Bot);
+		//delete Bot;
+
 		event.send("Disconnected");
 	}
 	static void List(const dpp::message_create_t& event)
@@ -181,7 +226,7 @@ public:
 	}
 	static void Join(const dpp::message_create_t& event, std::string args)
 	{
-		auto Bot = GetBot(event);
+		auto Bot = GetBot(event, true);
 		if (Bot == nullptr) return;
 		args = args.substr(1);
 		LoadBalancing::Room* Target = NULL;
@@ -203,6 +248,107 @@ public:
 			std::cout << "joining" << std::endl;
 			Bot->Client.opJoinRoom(Target->getName());
 		}
+	}
+	static void PlayerList(const dpp::message_create_t& event)
+	{
+		auto Bot = GetBot(event);
+		if (Bot == nullptr) return;
+		if (Bot->Client.getState() != 15) return;
+		std::string List = "```";
+		auto RoomName = Helpers::Split(std::regex_replace(Bot->Client.getCurrentlyJoinedRoom().getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""), '`');
+		List += "Roomname: " + RoomName[0] + "\n";
+		List += "Current Playercount: " + std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayerCount()) + "/" + std::to_string(Bot->Client.getCurrentlyJoinedRoom().getMaxPlayers()) + "\n";
+		List += "Room: " + RoomName[1] + "\n";
+
+
+		for (int i = 0; Bot->Client.getCurrentlyJoinedRoom().getPlayers().getSize() > i; i++)
+		{
+			auto player = Bot->Client.getCurrentlyJoinedRoom().getPlayers()[i];
+			auto props = player->getCustomProperties();
+
+			List += player->getIsMasterClient() ? "[M]" : "[P]";
+			if (props.contains("isTitan"))
+			{
+				bool IsTitan = Common::ValueObject<int>(props.getValue("isTitan")).getDataCopy() == 2;
+				List += IsTitan ? "[T]" : "[H]";
+				 
+			}
+			else
+			{
+				List += "[H]";
+			}
+			List += " [";
+			auto BiggestId = std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayers().getLastElement()->getNumber());
+
+			List += std::string("0", BiggestId.size() - std::to_string(player->getNumber()).size());
+			List += std::to_string(player->getNumber()) + "] ";
+
+			std::string Name;
+			//name
+			if (props.contains("name"))
+			{
+				Name = std::regex_replace(Common::ValueObject<Common::JString>(props.getValue("name")).getDataCopy().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
+			}
+			else
+			{
+				Name = "Nameless";
+			}
+			if (Name.size() > 17)
+				Name.erase(17, Name.size());
+
+			List += Name + std::string(" ", 23 - Name.size());
+
+			std::string Stats;
+			if (props.contains("kills"))
+			{
+				Stats += std::to_string(Common::ValueObject<int>(props.getValue("kills")).getDataCopy()) + "/";
+			}
+			else
+			{
+				Stats += "1-1/";
+			}
+			if (props.contains("deaths"))
+			{
+				Stats += std::to_string(Common::ValueObject<int>(props.getValue("deaths")).getDataCopy()) + "/";
+			}
+			else
+			{
+				Stats += "2-1/";
+			}
+			if (props.contains("max_dmg"))
+			{
+				Stats += std::to_string(Common::ValueObject<int>(props.getValue("max_dmg")).getDataCopy()) + "/";
+			}
+			else
+			{
+				Stats += "3-1/";
+			}
+			if (props.contains("total_dmg"))
+			{
+				Stats += std::to_string(Common::ValueObject<int>(props.getValue("total_dmg")).getDataCopy());
+			}
+			else
+			{
+				Stats += "4-1";
+			}
+
+			List += Stats + std::string(" ", 20 - Stats.size());
+
+			if (props.contains("dead"))
+			{
+				bool IsDead = Common::ValueObject<bool>(props.getValue("dead")).getDataCopy();
+				List += IsDead ? "Dead" : "Alive";
+			}
+			else
+			{
+				List += "Dead";
+			}
+
+			List += "\n";
+			std::cout << List << std::endl;
+		}
+		List += "```";
+		Bot->Chat += List;
 	}
 	static void Debug(const dpp::message_create_t& event)
 	{
@@ -234,7 +380,8 @@ public:
 
 	static void CreateRoom(const dpp::message_create_t& event)
 	{
-		auto Bot = GetBot(event);
+		return;
+		auto Bot = GetBot(event, true);
 		if (Bot == nullptr) return;
 
 		ExitGames::Common::Hashtable Props;

@@ -69,12 +69,35 @@ void NotPhotonListener::serverErrorReturn(int errorCode)
 
 void NotPhotonListener::joinRoomEventAction(int playerNr, const Common::JVector<int>& playernrs, const LoadBalancing::Player& player)
 {
-	std::cout << "Player " << playerNr << " joined" << std::endl;
+	//std::cout << "Player " << playerNr << " joined" << std::endl;
+	std::string JoineMsg = "[" + std::to_string(playerNr) + "] ";
+	if (player.getCustomProperties().contains("name"))
+	{
+		JoineMsg += std::regex_replace(std::string(player.getCustomProperties().getValue("name")->toString().UTF8Representation().cstr()).substr(1), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
+		JoineMsg.pop_back();
+	}
+	else
+	{
+		JoineMsg += "Nameless";
+	}
+	JoineMsg += " joined the room!";
+	Chat += JoineMsg;
+
 }
 
 void NotPhotonListener::leaveRoomEventAction(int playerNr, bool isInactive)
 {
+	/*for (int i = 0; this->Client.getCurrentlyJoinedRoom().getPlayers().getSize() > i; i++)
+	{
+		auto p = this->Client.getCurrentlyJoinedRoom().getPlayers()[i];
+		std::cout << p->getNumber() << std::endl;
+		if (p->getNumber() == playerNr)
+		{
+			std::cout << "Was still inside :lickge:" << std::endl;
+		}
+	}*/
 	std::cout << "Player " << playerNr << " left" << std::endl;
+	Chat += "[" + std::to_string(playerNr) + "]\tleft the Room";
 }
 
 //InRoom Events
@@ -95,16 +118,23 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 			Common::Object* RPCName = hash.getValue(three);
 			std::string res;
 			if (RPCName)
-				res = (std::string)RPCName->toString().UTF8Representation().cstr();
+			{
+				res = std::string(RPCName->toString().UTF8Representation().cstr());
+			}
 
 			if (value == (byte)62 || res == "\"Chat\"")
 			{
 				auto args = Common::ValueObject<Common::Object*>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
 
 				if (args == nullptr) return;
+				
 
-				auto content = (std::string)args[0].toString().UTF8Representation().cstr();
-				auto sender = (std::string)args[1].toString().UTF8Representation().cstr();
+
+
+				auto content = std::string(args[0].toString().UTF8Representation().cstr());
+				auto sender = std::string(args[1].toString().UTF8Representation().cstr());
+
+
 
 				if (sender == "\"\"")
 				{
@@ -119,10 +149,14 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 				content = content.substr(1);
 				content.pop_back();
 
-				dpp::message msg(this->ChannelId, std::regex_replace(sender + content, std::regex(std::string(R"(<[^>]*>)")), ""));
+				Chat += "[" + std::to_string(playerNr) + "] " + std::regex_replace(sender + content, std::regex(std::string(R"(<[^>]*>)")), "") + "\n";
+
+				/*dpp::message msg(this->ChannelId, std::regex_replace(sender + content, std::regex(std::string(R"(<[^>]*>)")), ""));
 				msg.set_guild_id(this->GuildId);
-				DiscordBotStuff::SendMsg(msg);
+				DiscordBotStuff::SendMsg(msg);*/
+				ExitGames::Common::MemoryManagement::deallocateArray(args);
 			}
+
 		}
 	}
 }
@@ -147,6 +181,11 @@ void NotPhotonListener::disconnectReturn(void)
 void NotPhotonListener::leaveRoomReturn(int errorCode, const Common::JString& errorString)
 {
 	std::cout << "left Room " << errorCode << " " << errorString.UTF8Representation().cstr() << std::endl;
+}
+
+void NotPhotonListener::onMasterClientChanged(int id, int oldID)
+{
+	std::cout << "MC changed to " + id << std::endl;
 }
 
 void NotPhotonListener::onStatusChanged(int statusCode)
