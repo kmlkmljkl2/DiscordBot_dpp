@@ -19,7 +19,7 @@ public:
 	uint64_t GuildId;
 	std::string Chat;
 private:
-
+	void Run();
 	// Inherited via Listener
 	virtual void debugReturn(int debugLevel, const Common::JString& string) override;
 	virtual void connectionErrorReturn(int errorCode) override;

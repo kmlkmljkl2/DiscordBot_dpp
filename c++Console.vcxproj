@@ -183,6 +183,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="c++Console.cpp" />
+    <ClCompile Include="Command.cpp" />
     <ClCompile Include="CommandHandler.cpp" />
     <ClCompile Include="DiscordBotStuff.cpp" />
     <ClCompile Include="Helpers.cpp" />
@@ -193,6 +194,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Command.h" />
     <ClInclude Include="NotPhotonListener.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

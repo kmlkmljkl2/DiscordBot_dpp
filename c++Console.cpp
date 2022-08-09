@@ -9,9 +9,15 @@
 #include <fstream>
 #include <JString.h>
 #include "DiscordBotStuff.cpp"
+#include "Command.h"
 #define _CRT_SECURE_NO_WARNINGS
 
-void onMessage_Event(const dpp::message_create_t& event) {
+std::map<std::string, Command> CommandList;
+
+std::string HelpMsg;
+
+void onMessage_Event(const dpp::message_create_t& event)
+{
 	if (event.msg.author.is_bot()) return;
 	if (!event.msg.content._Starts_with("-"))
 	{
@@ -27,11 +33,15 @@ void onMessage_Event(const dpp::message_create_t& event) {
 				//Having both byte 3 and byte 5 set makes MC auto-ban you
 				data.put<byte, char[5]>(3, "Chat"); // RPC Name
 
-				ExitGames::Common::JString args[2];
-				args[0] = ExitGames::Common::JString(event.msg.content.c_str());
-				args[1] = ExitGames::Common::JString(event.msg.author.username.c_str());
 
-				data.put<byte>(4, args, 2);
+				auto msg = ExitGames::Common::JString(event.msg.content.c_str());
+				auto name = ExitGames::Common::JString(event.msg.author.username.c_str());
+
+				Common::Object t[2];
+				t[0] = Common::Helpers::ValueToObject<Common::Object>::get(msg);
+				t[1] = Common::Helpers::ValueToObject<Common::Object>::get(name);
+
+				data.put<byte>(4,t, 2);
 				Bot->Client.opRaiseEvent(true, data, 200, ExitGames::LoadBalancing::RaiseEventOptions());
 			}
 		}
@@ -41,61 +51,79 @@ void onMessage_Event(const dpp::message_create_t& event) {
 
 	std::string cmd = event.msg.content.substr(1, event.msg.content.find_first_of(' ') - 1);
 	std::string EventArgs = event.msg.content.substr(event.msg.content.find_first_of(cmd) + cmd.length());
+	if (EventArgs != "")
+		EventArgs = EventArgs.substr(1);
+	cmd = Helpers::ToLower(cmd);
+	bool NeedsHelp = cmd == "help";
 
-	if (cmd == "s" || cmd == "start")
+	if (NeedsHelp)
 	{
-		CommandHandler::Start(event);
+		if (EventArgs == "")
+		{
+			event.send(HelpMsg);
+			return;
+		}
+		cmd = Helpers::ToLower(EventArgs);
 	}
-	if (cmd == "test")
+	
+
+	//std::cout << "\"" << EventArgs << "\"" << std::endl;
+
+	for (auto i : CommandList)
 	{
-		CommandHandler::Test(event);
+		if (cmd == i.first || cmd == i.second.AlternateName)
+		{
+			if (NeedsHelp)
+			{
+				event.send(i.second.Description);
+				break;
+			}
+			if (i.second.RequireArgs && EventArgs == "")
+			{
+				event.reply("Command requires Arguments!");
+				break;
+			}
+			i.second.Method(event, EventArgs);
+			Logger::LogDebug("Executed Command " + i.first);
+			break;
+		}
+
 	}
-	else if (cmd == "meow")
-	{
-		CommandHandler::Meow(event);
-	}
-	else if (cmd == "create")
-	{
-		CommandHandler::CreateRoom(event);
-	}
-	else if (cmd == "ahegao")
-	{
-		CommandHandler::Ahegao(event);
-	}
-	else if (cmd == "dc")
-	{
-		CommandHandler::Disconnect(event);
-	}
-	else if (cmd == "l")
-	{
-		CommandHandler::List(event);
-	}
-	else if (cmd == "j" || cmd == "join")
-	{
-		CommandHandler::Join(event, EventArgs);
-	}
-	else if (cmd == "debug")
-	{
-		CommandHandler::Debug(event);
-	}
-	else if (cmd == "p" || cmd == "playerlist")
-	{
-		CommandHandler::PlayerList(event);
-	}
-	else
-	{
-		return;
-	}
-	Logger::LogDebug("Executed command: " + cmd);
+	//Command Not Found
 };
+
+void InitCommands()
+{
+	
+	CommandList["test"] = Command(CommandHandler::Test, "Testing stuff");
+	CommandList["start"] = Command(CommandHandler::Start, "Starts a BotInstance", "s");
+	CommandList["playerlist"] = Command(CommandHandler::PlayerList, "Gives you the Player list", "p");
+	CommandList["debug"] = Command(CommandHandler::Debug, "Debugging purposes");
+	CommandList["join"] = Command(CommandHandler::Join, "Joins a Room -join [Name]", "j");
+	CommandList["list"] = Command(CommandHandler::List, "Gives you the Room list", "l");
+	CommandList["disconnect"] = Command(CommandHandler::Disconnect, "Disconnects the bot", "dc");
+	CommandList["ahegao"] = Command(CommandHandler::Ahegao, "best kind of gao");
+	CommandList["meow"] = Command(CommandHandler::Meow, "Meow");
+
+	CommandList["join"].RequireArgs = true;
+
+	HelpMsg += "```";
+	for (auto i : CommandList)
+	{
+		HelpMsg += "\n" + i.first;
+		HelpMsg += std::string(20 - i.first.size(), ' ');
+		HelpMsg += i.second.Description;
+	}
+	HelpMsg += "```";
+}
 
 int main()
 {
 	DiscordBotStuff::Init();
 	CommandHandler::Init();
+	InitCommands();
 	Logger::LogDebug("Starting");
 	DiscordBot.on_log(dpp::utility::cout_logger());
-
 	DiscordBot.on_message_create.attach(onMessage_Event);
 
 	DiscordBot.start(false);

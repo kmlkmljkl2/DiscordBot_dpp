@@ -12,6 +12,8 @@
 #include <regex>
 #include "Helpers.cpp"
 #include "DiscordBotStuff.cpp"
+#include "Command.h"
+
 
 using namespace dpp;
 using json = nlohmann::json;
@@ -142,7 +144,7 @@ public:
 		t.detach();
 	}
 
-	static void Start(const dpp::message_create_t& event)
+	static void Start(const dpp::message_create_t& event, std::string args = "")
 	{
 		auto OldBot = GetBot(event);
 		if (OldBot != nullptr)
@@ -191,7 +193,7 @@ public:
 
 		List(event);
 	}
-	static void Disconnect(const dpp::message_create_t& event)
+	static void Disconnect(const dpp::message_create_t& event, std::string args = "")
 	{
 		auto Bot = GetBot(event, true);
 		if (Bot == nullptr) return;
@@ -204,7 +206,7 @@ public:
 
 		event.send("Disconnected");
 	}
-	static void List(const dpp::message_create_t& event)
+	static void List(const dpp::message_create_t& event, std::string args = "")
 	{
 		auto Bot = GetBot(event);
 		if (Bot == nullptr) return;
@@ -220,6 +222,8 @@ public:
 
 			auto Data = splitted[0] + std::string(50 - splitted[0].length(), ' ') + splitted[1] + std::string(22 - splitted[1].length(), ' ') /*+ e*/;
 
+			Data += std::to_string(room->getPlayerCount()) + std::string(2, ' ') + "/" + std::to_string(room->getMaxPlayers());
+
 			List << Data << "\n";
 		}
 
@@ -229,7 +233,6 @@ public:
 	{
 		auto Bot = GetBot(event, true);
 		if (Bot == nullptr) return;
-		args = args.substr(1);
 		LoadBalancing::Room* Target = NULL;
 		for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
 		{
@@ -250,7 +253,7 @@ public:
 			Bot->Client.opJoinRoom(Target->getName());
 		}
 	}
-	static void PlayerList(const dpp::message_create_t& event)
+	static void PlayerList(const dpp::message_create_t& event, std::string args = "")
 	{
 		auto Bot = GetBot(event);
 		if (Bot == nullptr) return;
@@ -353,7 +356,7 @@ public:
 		List += "```";
 		Bot->Chat += List;
 	}
-	static void Debug(const dpp::message_create_t& event)
+	static void Debug(const dpp::message_create_t& event, std::string args = "")
 	{
 		auto Bot = GetBot(event);
 		if (Bot == nullptr) return;
@@ -374,11 +377,12 @@ public:
 		return test;
 	}*/
 
-	static void Test(const dpp::message_create_t& event)
+	static void Test(const dpp::message_create_t& event, std::string args = "")
 	{
 		/*dpp::message msg(event.msg.channel_id, "test");
 		msg.set_guild_id(event.msg.guild_id);
 		DiscordBotStuff::SendMsg(msg);*/
+		event.reply("yup nothing");
 	}
 
 	static void CreateRoom(const dpp::message_create_t& event)
@@ -408,7 +412,7 @@ public:
 
 	//"https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 10))
 
-	static void Meow(const dpp::message_create_t& event)
+	static void Meow(const dpp::message_create_t& event, std::string args = "")
 	{
 		std::string Url = "https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 100));
 
@@ -419,7 +423,7 @@ public:
 		result = j["results"][0]["media"][0]["gif"]["url"];
 		event.send(result);
 	}
-	static void Ahegao(const dpp::message_create_t& event)
+	static void Ahegao(const dpp::message_create_t& event, std::string args = "")
 	{
 		std::string Url = "https://g.tenor.com/v1/search?q=ahegao&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 100));
 

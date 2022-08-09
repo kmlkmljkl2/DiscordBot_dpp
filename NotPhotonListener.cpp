@@ -7,15 +7,13 @@
 #include "Logger.cpp"
 #include <regex>
 
-void Run(NotPhotonListener* Bot)
+void NotPhotonListener::Run()
 {
-	while (Bot->KeepRunning)
+	while (KeepRunning)
 	{
 		try
 		{
-			if (Bot == nullptr)
-				break;
-			Bot->Client.service();
+			Client.service();
 			SLEEP(10);
 		}
 		catch (std::exception err)
@@ -28,14 +26,13 @@ void Run(NotPhotonListener* Bot)
 
 NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
-	std::thread t(Run, this);
-	t.detach();
+	std::thread(&NotPhotonListener::Run, this).detach();
 }
 
 NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
-	std::thread t(Run, this);
-	t.detach();
+	std::thread(&NotPhotonListener::Run, this).detach();
+
 }
 
 NotPhotonListener::~NotPhotonListener()
@@ -125,12 +122,14 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 			if (value == (byte)62 || res == "\"Chat\"")
 			{
 				auto args = Common::ValueObject<Common::Object*>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
-
-				if (args == nullptr) return;
-				
+				//auto args2 = Common::ValueObject<Common::JString>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
 
 
-
+				if (args == nullptr)
+				{
+					std::cout << "Object* was null" << std::endl;
+					return;
+				}
 				auto content = std::string(args[0].toString().UTF8Representation().cstr());
 				auto sender = std::string(args[1].toString().UTF8Representation().cstr());
 
@@ -185,7 +184,7 @@ void NotPhotonListener::leaveRoomReturn(int errorCode, const Common::JString& er
 
 void NotPhotonListener::onMasterClientChanged(int id, int oldID)
 {
-	std::cout << "MC changed to " + id << std::endl;
+	std::cout << "MC changed to "  << id << std::endl;
 }
 
 void NotPhotonListener::onStatusChanged(int statusCode)
