@@ -1,9 +1,8 @@
 #include "NotPhotonListener.h"
 #include <iostream>
 #include <vector>
-#include "Helpers.cpp"
+#include "Helpers.h"
 #include <dpp/dpp.h>
-#include "DiscordBotStuff.cpp"
 #include "Logger.cpp"
 #include <regex>
 

@@ -8,7 +8,7 @@ static class DiscordBotStuff
 private:
 	inline static std::string Token = "";
 
-	
+
 
 public:
 
@@ -24,7 +24,7 @@ public:
 		}
 		DiscordBot.token = Token;
 
-		
+
 	}
 	static void SendMsg(const dpp::message msg)
 	{

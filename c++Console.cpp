@@ -5,12 +5,14 @@
 
 #include <dpp/dpp.h>
 #include "Logger.cpp"
-#include "CommandHandler.cpp"
+#include "CommandHandler.h"
 #include <fstream>
 #include <JString.h>
-#include "DiscordBotStuff.cpp"
 #include "Command.h"
+#include "Helpers.h"
+#include "DiscordBotStuff.cpp"
 #define _CRT_SECURE_NO_WARNINGS
+
 
 std::map<std::string, Command> CommandList;
 
@@ -33,7 +35,6 @@ void onMessage_Event(const dpp::message_create_t& event)
 				//Having both byte 3 and byte 5 set makes MC auto-ban you
 				data.put<byte, char[5]>(3, "Chat"); // RPC Name
 
-
 				auto msg = ExitGames::Common::JString(event.msg.content.c_str());
 				auto name = ExitGames::Common::JString(event.msg.author.username.c_str());
 
@@ -41,7 +42,7 @@ void onMessage_Event(const dpp::message_create_t& event)
 				t[0] = Common::Helpers::ValueToObject<Common::Object>::get(msg);
 				t[1] = Common::Helpers::ValueToObject<Common::Object>::get(name);
 
-				data.put<byte>(4,t, 2);
+				data.put<byte>(4, t, 2);
 				Bot->Client.opRaiseEvent(true, data, 200, ExitGames::LoadBalancing::RaiseEventOptions());
 			}
 		}
@@ -53,7 +54,6 @@ void onMessage_Event(const dpp::message_create_t& event)
 	std::string EventArgs = event.msg.content.substr(event.msg.content.find_first_of(cmd) + cmd.length());
 	if (EventArgs != "")
 		EventArgs = EventArgs.substr(1);
-	cmd = Helpers::ToLower(cmd);
 	bool NeedsHelp = cmd == "help";
 
 	if (NeedsHelp)
@@ -63,9 +63,8 @@ void onMessage_Event(const dpp::message_create_t& event)
 			event.send(HelpMsg);
 			return;
 		}
-		cmd = Helpers::ToLower(EventArgs);
 	}
-	
+	cmd = Helpers::ToLower(cmd);
 
 	//std::cout << "\"" << EventArgs << "\"" << std::endl;
 
@@ -83,18 +82,17 @@ void onMessage_Event(const dpp::message_create_t& event)
 				event.reply("Command requires Arguments!");
 				break;
 			}
-			i.second.Method(event, EventArgs);
 			Logger::LogDebug("Executed Command " + i.first);
+
+			i.second.Method(event, EventArgs);
 			break;
 		}
-
 	}
 	//Command Not Found
 };
 
 void InitCommands()
 {
-	
 	CommandList["test"] = Command(CommandHandler::Test, "Testing stuff");
 	CommandList["start"] = Command(CommandHandler::Start, "Starts a BotInstance", "s");
 	CommandList["playerlist"] = Command(CommandHandler::PlayerList, "Gives you the Player list", "p");
@@ -104,8 +102,10 @@ void InitCommands()
 	CommandList["disconnect"] = Command(CommandHandler::Disconnect, "Disconnects the bot", "dc");
 	CommandList["ahegao"] = Command(CommandHandler::Ahegao, "best kind of gao");
 	CommandList["meow"] = Command(CommandHandler::Meow, "Meow");
+	CommandList["ud"] = Command(CommandHandler::UrbanDictionary, "Gets the Definition for the given term");
 
 	CommandList["join"].RequireArgs = true;
+	CommandList["ud"].RequireArgs = true;
 
 	HelpMsg += "```";
 	for (auto i : CommandList)
@@ -116,15 +116,20 @@ void InitCommands()
 	}
 	HelpMsg += "```";
 }
+std::string Token = "";
 
 int main()
 {
+
 	DiscordBotStuff::Init();
 	CommandHandler::Init();
 	InitCommands();
 	Logger::LogDebug("Starting");
+
+
 	DiscordBot.on_log(dpp::utility::cout_logger());
 	DiscordBot.on_message_create.attach(onMessage_Event);
+	SLEEP(1000);
 
 	DiscordBot.start(false);
 }

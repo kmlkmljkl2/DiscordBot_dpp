@@ -1,0 +1,59 @@
+#pragma once
+#include <iostream>
+#include <dpp/dispatcher.h>
+#include "NotPhotonListener.h"
+#include "UrbanDictionaryJson.h"
+
+static class CommandHandler
+{
+private:
+	static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
+	static std::string GetResponse(std::string Url);
+	static NotPhotonListener* GetBot(const dpp::message_create_t& event, bool OwnerOnly = false);
+	static void RemoveBot(NotPhotonListener* OldBot);
+	inline static const std::vector<std::string> ClientStates{
+		"Uninitialized",
+		"PeerCreated",
+		"ConnectingToNameserver",
+		"ConnectedToNameserver",
+		"DisconnectingFromNameserver",
+		"Connecting",
+		"Connected",
+		"WaitingForCustomAuthenticationNextStepCall",
+		"Authenticated",
+		"JoinedLobby",
+		"DisconnectingFromMasterserver",
+		"ConnectingToGameserver",
+		"ConnectedToGameserver",
+		"AuthenticatedOnGameServer",
+		"Joining",
+		"Joined",
+		"Leaving",
+		"Left",
+		"DisconnectingFromGameserver",
+		"ConnectingToMasterserver",
+		"ConnectedComingFromGameserver",
+		"AuthenticatedComingFromGameserver",
+		"Disconnecting",
+		"Disconnected"
+	};
+	static void HandleChat();
+
+
+public:
+	static inline UrbanDictionaryJson Definitions;
+	inline static std::vector<NotPhotonListener*> StoreVector;
+	static void Init();
+
+	static void UrbanDictionary(const dpp::message_create_t& event, std::string args = "");
+	static void Ahegao(const dpp::message_create_t& event, std::string args = "");
+	static void Meow(const dpp::message_create_t& event, std::string args = "");
+	static void CreateRoom(const dpp::message_create_t& event);
+	static void Test(const dpp::message_create_t& event, std::string args = "");
+	static void Debug(const dpp::message_create_t& event, std::string args = "");
+	static void PlayerList(const dpp::message_create_t& event, std::string args = "");
+	static void Join(const dpp::message_create_t& event, std::string args);
+	static void List(const dpp::message_create_t& event, std::string args = "");
+	static void Disconnect(const dpp::message_create_t& event, std::string args = "");
+	static void Start(const dpp::message_create_t& event, std::string args = "");
+};
