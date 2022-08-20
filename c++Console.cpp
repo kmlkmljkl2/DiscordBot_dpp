@@ -10,7 +10,7 @@
 #include <JString.h>
 #include "Command.h"
 #include "Helpers.h"
-#include "DiscordBotStuff.cpp"
+#include "DiscordBotStuff.h"
 #define _CRT_SECURE_NO_WARNINGS
 
 
@@ -83,7 +83,6 @@ void onMessage_Event(const dpp::message_create_t& event)
 				break;
 			}
 			Logger::LogDebug("Executed Command " + i.first);
-
 			i.second.Method(event, EventArgs);
 			break;
 		}
@@ -103,6 +102,9 @@ void InitCommands()
 	CommandList["ahegao"] = Command(CommandHandler::Ahegao, "best kind of gao");
 	CommandList["meow"] = Command(CommandHandler::Meow, "Meow");
 	CommandList["ud"] = Command(CommandHandler::UrbanDictionary, "Gets the Definition for the given term");
+	CommandList["next"] = Command(CommandHandler::Next, "Gives you the next definition given by -ud");
+	CommandList["back"] = Command(CommandHandler::Back, "Gives you the previous definition given by -ud");
+
 
 	CommandList["join"].RequireArgs = true;
 	CommandList["ud"].RequireArgs = true;
@@ -116,7 +118,6 @@ void InitCommands()
 	}
 	HelpMsg += "```";
 }
-std::string Token = "";
 
 int main()
 {
@@ -127,11 +128,15 @@ int main()
 	Logger::LogDebug("Starting");
 
 
-	DiscordBot.on_log(dpp::utility::cout_logger());
-	DiscordBot.on_message_create.attach(onMessage_Event);
-	SLEEP(1000);
+	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());
+	DiscordBotStuff::DiscordBot->on_message_create.attach(onMessage_Event);
+	while (DiscordBotStuff::DiscordBot->token == "")
+	{
+		SLEEP(1000);
+	}
 
-	DiscordBot.start(false);
+	DiscordBotStuff::DiscordBot->start(false);
+
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

@@ -56,4 +56,7 @@ public:
 	static void List(const dpp::message_create_t& event, std::string args = "");
 	static void Disconnect(const dpp::message_create_t& event, std::string args = "");
 	static void Start(const dpp::message_create_t& event, std::string args = "");
+	static void Next(const dpp::message_create_t& event, std::string args = "");
+	static void Back(const dpp::message_create_t& event, std::string args = "");
+
 };

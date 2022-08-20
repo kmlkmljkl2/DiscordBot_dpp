@@ -20,15 +20,17 @@ void NotPhotonListener::Run()
 			std::cout << err.what() << std::endl;
 			SLEEP(10);
 		}
+	
 	}
+	delete this;
 }
 
-NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
+NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::TCP)
 {
 	std::thread(&NotPhotonListener::Run, this).detach();
 }
 
-NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
+NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::TCP)
 {
 	std::thread(&NotPhotonListener::Run, this).detach();
 

@@ -14,7 +14,7 @@
 #include "Helpers.h"
 #include "Command.h"
 #include "UrbanDictionaryJson.h"
-#include "DiscordBotStuff.cpp"
+#include "DiscordBotStuff.h"
 
 size_t CommandHandler::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
@@ -73,6 +73,7 @@ void CommandHandler::RemoveBot(NotPhotonListener* OldBot)
 	{
 		if (StoreVector[i] == OldBot)
 		{
+			StoreVector[i] = NULL;
 			StoreVector.erase(StoreVector.begin() + i);
 		}
 	}
@@ -89,10 +90,11 @@ void CommandHandler::HandleChat()
 
 			if (Bot->Chat.size() > 2000)
 				Bot->Chat = "Message was over 2k Characters, it got ate";
-
+			//std::cout << Bot->Chat.size() << std::endl;
 			dpp::message msg(Bot->ChannelId, Bot->Chat);
 			msg.set_guild_id(Bot->GuildId);
 			Bot->Chat = "";
+			
 			DiscordBotStuff::SendMsg(msg);
 
 		}
@@ -120,6 +122,7 @@ void CommandHandler::UrbanDictionary(const dpp::message_create_t& event, std::st
 	Definitions = ud;
 	event.send(ud.Definitions[0] + "\t1" + "/" + std::to_string(ud.Definitions.size()));
 }
+
 
 void CommandHandler::Ahegao(const dpp::message_create_t& event, std::string args)
 {
@@ -173,11 +176,8 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event)
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
 	dpp::message msg(event.msg.channel_id, "test");
-	//msg.set_guild_id(event.msg.guild_id);
-	
+	msg.set_guild_id(event.msg.guild_id);
 	DiscordBotStuff::SendMsg(msg);
-
-
 }
 
 void CommandHandler::Debug(const dpp::message_create_t& event, std::string args)
@@ -201,33 +201,38 @@ void CommandHandler::PlayerList(const dpp::message_create_t& event, std::string 
 	auto Bot = GetBot(event);
 	if (Bot == nullptr) return;
 	if (Bot->Client.getState() != 15) return;
-	std::string List = "```";
+
+	std::stringstream List;
+
+	List << "```";
+	//std::string List = "```";
 	auto RoomName = Helpers::Split(std::regex_replace(Bot->Client.getCurrentlyJoinedRoom().getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""), '`');
-	List += "Roomname: " + RoomName[0] + "\n";
-	List += "Current Playercount: " + std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayerCount()) + "/" + std::to_string(Bot->Client.getCurrentlyJoinedRoom().getMaxPlayers()) + "\n";
-	List += "Room: " + RoomName[1] + "\n";
+	List << "Roomname: " + RoomName[0] + "\n";
+	List << "Current Playercount: " + std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayerCount()) + "/" + std::to_string(Bot->Client.getCurrentlyJoinedRoom().getMaxPlayers()) + "\n";
+	List << "Room: " + RoomName[1] + "\n";
 
 	for (int i = 0; Bot->Client.getCurrentlyJoinedRoom().getPlayers().getSize() > i; i++)
 	{
 		auto player = Bot->Client.getCurrentlyJoinedRoom().getPlayers()[i];
 		auto props = player->getCustomProperties();
 
-		List += props.contains("NoodleDoodle") ? "[B]" : player->getIsMasterClient() ? "[M]" : "[P]";
+		List << (props.contains("NoodleDoodle") ? "[B]" : player->getIsMasterClient() ? "[M]" : "[P]");
 
 		if (props.contains("isTitan"))
 		{
 			bool IsTitan = Common::ValueObject<int>(props.getValue("isTitan")).getDataCopy() == 2;
-			List += IsTitan ? "[T]" : "[H]";
+			List << (IsTitan ? "[T]" : "[H]");
 		}
 		else
 		{
-			List += "[H]";
+			List << "[H]";
 		}
-		List += " [";
+		List << " [";
 		auto BiggestId = std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayers().getLastElement()->getNumber());
-
-		List += std::string(BiggestId.size() - std::to_string(player->getNumber()).size(), '0');
-		List += std::to_string(player->getNumber()) + "] ";
+		//std::cout << BiggestId.size() - std::to_string(player->getNumber()).size() << std::endl;
+		List << std::string(BiggestId.size() - std::to_string(player->getNumber()).size(), '0');
+		//std::cout << List.str() << std::endl;
+		List << std::to_string(player->getNumber()) + "] ";
 
 		std::string Name;
 		//name
@@ -242,7 +247,7 @@ void CommandHandler::PlayerList(const dpp::message_create_t& event, std::string 
 		if (Name.size() > 20)
 			Name.erase(20, Name.size());
 
-		List += Name + std::string(23 - Name.size(), ' ');
+		List << Name + std::string(23 - Name.size(), ' ');
 
 		std::string Stats;
 		if (props.contains("kills"))
@@ -278,23 +283,24 @@ void CommandHandler::PlayerList(const dpp::message_create_t& event, std::string 
 			Stats += "-1";
 		}
 
-		List += Stats + std::string(20 - Stats.size(), ' ');
+		List << Stats + std::string(20 - Stats.size(), ' ');
 
 		if (props.contains("dead"))
 		{
 			bool IsDead = Common::ValueObject<bool>(props.getValue("dead")).getDataCopy();
-			List += IsDead ? "Dead" : "Alive";
+			List << (IsDead ? "Dead" : "Alive");
 		}
 		else
 		{
-			List += "Dead";
+			List << "Dead";
 		}
 
-		List += "\n";
-		//std::cout << List << std::endl;
+		List << "\n";
+		
 	}
-	List += "```";
-	Bot->Chat += List;
+	List << "```";
+	//std::cout << List.size() << std::endl;
+	Bot->Chat += List.str();
 }
 
 void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
@@ -345,8 +351,11 @@ void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 
 		RoomInfo += splitted[1] + std::string(21 - splitted[1].size(), ' ') + " | ";
 
-		RoomInfo += std::to_string(room->getPlayerCount()) + "  /";
-		RoomInfo += std::to_string(room->getMaxPlayers()) + "   |";
+		std::string PlayerCount = std::to_string(room->getPlayerCount());
+		std::string MaxPlayerCount = std::to_string(room->getMaxPlayers());
+
+		RoomInfo += PlayerCount + std::string(4 - PlayerCount.size(), ' ') + "/";
+		RoomInfo += MaxPlayerCount + std::string(4 - MaxPlayerCount.size(), ' ') + "|";
 		RoomInfo += room->getIsOpen() ? "" : "CLOSED";
 		RoomInfo += splitted[5] == "" ? "" : R"([PWD])";
 
@@ -363,7 +372,7 @@ void CommandHandler::Disconnect(const dpp::message_create_t& event, std::string 
 
 	Bot->Client.disconnect();
 	Bot->KeepRunning = false;
-	Bot->~NotPhotonListener();
+	//Bot->~NotPhotonListener();
 	RemoveBot(Bot);
 	//delete Bot;
 
@@ -379,7 +388,7 @@ void CommandHandler::Start(const dpp::message_create_t& event, std::string args)
 		{
 			//remove(StoreVector.begin(), StoreVector.end(), OldBot);
 			OldBot->KeepRunning = false;
-			OldBot->~NotPhotonListener();
+			//OldBot->~NotPhotonListener();
 			RemoveBot(OldBot);
 			goto Continue;
 		}
@@ -434,5 +443,29 @@ Continue:
 	}
 
 	List(event);
+}
+
+void CommandHandler::Next(const dpp::message_create_t& event, std::string args)
+{
+	if (Definitions.Definitions.empty()) return;
+
+	auto definition = Definitions.GetNext();
+
+	if (definition == "") return;
+
+	event.send(definition);
+	
+
+}
+
+void CommandHandler::Back(const dpp::message_create_t& event, std::string args)
+{
+	if (Definitions.Definitions.empty()) return;
+
+	auto definition = Definitions.GetPrevious();
+
+	if (definition == "") return;
+
+	event.send(definition);
 }
 
