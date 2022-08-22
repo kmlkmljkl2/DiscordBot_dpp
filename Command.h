@@ -13,5 +13,4 @@ public:
 	std::string AlternateName;
 	std::function<void(const dpp::message_create_t& event, std::string args)> Method;
 	bool RequireArgs = false;
-
 };

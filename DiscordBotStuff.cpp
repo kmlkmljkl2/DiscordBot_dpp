@@ -2,8 +2,6 @@
 #include <dpp/dpp.h>
 #include "DiscordBotStuff.h"
 
-
-
 void DiscordBotStuff::Init()
 {
 	delete DiscordBot;
@@ -20,5 +18,4 @@ void DiscordBotStuff::Init()
 void DiscordBotStuff::SendMsg(dpp::message msg)
 {
 	DiscordBot->message_create_sync(msg);
-
 }

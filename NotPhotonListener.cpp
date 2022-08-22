@@ -20,20 +20,18 @@ void NotPhotonListener::Run()
 			std::cout << err.what() << std::endl;
 			SLEEP(10);
 		}
-	
 	}
 	delete this;
 }
 
-NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::TCP)
+NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
 	std::thread(&NotPhotonListener::Run, this).detach();
 }
 
-NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::TCP)
+NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
 	std::thread(&NotPhotonListener::Run, this).detach();
-
 }
 
 NotPhotonListener::~NotPhotonListener()
@@ -80,7 +78,6 @@ void NotPhotonListener::joinRoomEventAction(int playerNr, const Common::JVector<
 	}
 	JoineMsg += " joined the room!";
 	Chat += JoineMsg;
-
 }
 
 void NotPhotonListener::leaveRoomEventAction(int playerNr, bool isInactive)
@@ -125,7 +122,6 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 				auto args = Common::ValueObject<Common::Object*>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
 				//auto args2 = Common::ValueObject<Common::JString>((const Common::Object*)hash.getValue<byte>(4)).getDataCopy();
 
-
 				if (args == nullptr)
 				{
 					std::cout << "Object* was null" << std::endl;
@@ -133,8 +129,6 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 				}
 				auto content = std::string(args[0].toString().UTF8Representation().cstr());
 				auto sender = std::string(args[1].toString().UTF8Representation().cstr());
-
-
 
 				if (sender == "\"\"")
 				{
@@ -156,7 +150,6 @@ void NotPhotonListener::customEventAction(int playerNr, nByte eventCode, const C
 				DiscordBotStuff::SendMsg(msg);*/
 				ExitGames::Common::MemoryManagement::deallocateArray(args);
 			}
-
 		}
 	}
 }
@@ -185,7 +178,7 @@ void NotPhotonListener::leaveRoomReturn(int errorCode, const Common::JString& er
 
 void NotPhotonListener::onMasterClientChanged(int id, int oldID)
 {
-	std::cout << "MC changed to "  << id << std::endl;
+	std::cout << "MC changed to " << id << std::endl;
 }
 
 void NotPhotonListener::onStatusChanged(int statusCode)

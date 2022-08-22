@@ -94,9 +94,8 @@ void CommandHandler::HandleChat()
 			dpp::message msg(Bot->ChannelId, Bot->Chat);
 			msg.set_guild_id(Bot->GuildId);
 			Bot->Chat = "";
-			
-			DiscordBotStuff::SendMsg(msg);
 
+			DiscordBotStuff::SendMsg(msg);
 		}
 		std::this_thread::sleep_for(std::chrono::microseconds(1500));
 	}
@@ -122,7 +121,6 @@ void CommandHandler::UrbanDictionary(const dpp::message_create_t& event, std::st
 	Definitions = ud;
 	event.send(ud.Definitions[0] + "\t1" + "/" + std::to_string(ud.Definitions.size()));
 }
-
 
 void CommandHandler::Ahegao(const dpp::message_create_t& event, std::string args)
 {
@@ -296,11 +294,12 @@ void CommandHandler::PlayerList(const dpp::message_create_t& event, std::string 
 		}
 
 		List << "\n";
-		
 	}
 	List << "```";
 	//std::cout << List.size() << std::endl;
-	Bot->Chat += List.str();
+
+	event.send(List.str());
+	//Bot->Chat += List.str();
 }
 
 void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
@@ -420,7 +419,7 @@ Continue:
 	Bot->CreatorId = event.msg.author.id;
 	Bot->GuildId = event.msg.guild_id;
 	Bot->ChannelId = event.msg.channel_id;
-	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "cunt", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "crustycunt", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 	Bot->Client.connect(options);
 
 	std::cout << Bot << std::endl;
@@ -454,8 +453,6 @@ void CommandHandler::Next(const dpp::message_create_t& event, std::string args)
 	if (definition == "") return;
 
 	event.send(definition);
-	
-
 }
 
 void CommandHandler::Back(const dpp::message_create_t& event, std::string args)
@@ -468,4 +465,3 @@ void CommandHandler::Back(const dpp::message_create_t& event, std::string args)
 
 	event.send(definition);
 }
-

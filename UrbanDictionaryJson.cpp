@@ -24,7 +24,7 @@ std::string UrbanDictionaryJson::GetNext()
 
 std::string UrbanDictionaryJson::GetPrevious()
 {
-	if (Counter -1 != -1 && !Definitions.empty())
+	if (Counter - 1 != -1 && !Definitions.empty())
 	{
 		--Counter;
 		return Definitions[Counter] + "\t" + std::to_string(Counter + 1) + "/" + std::to_string(Definitions.size());

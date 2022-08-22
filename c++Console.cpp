@@ -13,7 +13,6 @@
 #include "DiscordBotStuff.h"
 #define _CRT_SECURE_NO_WARNINGS
 
-
 std::map<std::string, Command> CommandList;
 
 std::string HelpMsg;
@@ -105,7 +104,6 @@ void InitCommands()
 	CommandList["next"] = Command(CommandHandler::Next, "Gives you the next definition given by -ud");
 	CommandList["back"] = Command(CommandHandler::Back, "Gives you the previous definition given by -ud");
 
-
 	CommandList["join"].RequireArgs = true;
 	CommandList["ud"].RequireArgs = true;
 
@@ -121,12 +119,10 @@ void InitCommands()
 
 int main()
 {
-
 	DiscordBotStuff::Init();
 	CommandHandler::Init();
 	InitCommands();
 	Logger::LogDebug("Starting");
-
 
 	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());
 	DiscordBotStuff::DiscordBot->on_message_create.attach(onMessage_Event);
@@ -136,7 +132,6 @@ int main()
 	}
 
 	DiscordBotStuff::DiscordBot->start(false);
-
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
