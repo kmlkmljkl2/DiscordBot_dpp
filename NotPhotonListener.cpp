@@ -40,7 +40,7 @@ NotPhotonListener::~NotPhotonListener()
 
 void NotPhotonListener::debugReturn(int debugLevel, const Common::JString& string)
 {
-	std::cout << "DebugReturn: " << debugLevel << " " << string.UTF8Representation().cstr() << std::endl;
+	std::cout << "DebugReturn: " << std::to_string(debugLevel) << " " << string.UTF8Representation().cstr() << std::endl;
 }
 
 void NotPhotonListener::connectionErrorReturn(int errorCode)

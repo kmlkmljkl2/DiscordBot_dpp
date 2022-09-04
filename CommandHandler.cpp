@@ -97,7 +97,7 @@ void CommandHandler::HandleChat()
 
 			DiscordBotStuff::SendMsg(msg);
 		}
-		std::this_thread::sleep_for(std::chrono::microseconds(1500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 	}
 }
 
@@ -173,9 +173,16 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event)
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	dpp::message msg(event.msg.channel_id, "test");
-	msg.set_guild_id(event.msg.guild_id);
-	DiscordBotStuff::SendMsg(msg);
+	
+	auto i = dpp::find_channel(781936292773888024);
+	for (auto o : i->get_voice_members())
+	{
+		auto member = dpp::find_guild_member(i->guild_id, o.first);
+
+		event.reply(member.nickname);
+
+	}
+
 }
 
 void CommandHandler::Debug(const dpp::message_create_t& event, std::string args)
@@ -326,6 +333,40 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 	{
 		std::cout << "joining" << std::endl;
 		Bot->Client.opJoinRoom(Target->getName());
+		bool createChannel = false;
+		auto guild = dpp::find_guild(event.msg.guild_id);
+
+		/*for (int i = 0; guild->channels.size() > i; i++)
+		{
+			auto channel = dpp::find_channel(i);
+
+
+			if (channel == NULL) continue;
+
+			if ((channel->name == "aottg rooms" || channel->name == "aottg room") && channel->is_category())
+			{
+				createChannel = true;
+				break;
+			}
+			
+			for (auto i : channel->get_voice_members())
+			{
+				auto User = dpp::find_user(i.first);
+				std::cout << User->username << std::endl;
+
+			}
+
+
+
+		}*/
+
+		
+		if (!createChannel) return;
+
+		auto channel = dpp::channel();
+		channel.guild_id = event.msg.guild_id;
+		channel.name = Helpers::ToLower(std::regex_replace(Target->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""));
+		DiscordBotStuff().DiscordBot->channel_create(channel);
 	}
 }
 void CommandHandler::List(const dpp::message_create_t& event, std::string args)
@@ -337,7 +378,7 @@ void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 	for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
 	{
 		LoadBalancing::Room* room = Bot->Client.getRoomList()[i];
-		auto cleanname = std::regex_replace(room->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
+		auto cleanname = std::regex_replace(room->getName().ANSIRepresentation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
 		auto splitted = Helpers::Split(cleanname, '`');
 
 		std::string RoomInfo;
@@ -432,7 +473,7 @@ Continue:
 	Bot->Client.getLocalPlayer().addCustomProperty("NoodleDoodle", "I'm a Discord Bot");
 
 	StoreVector.push_back(Bot);
-	SLEEP(1000);
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
 	{
 		event.reply("Failed to join Server, try again");
