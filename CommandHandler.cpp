@@ -94,8 +94,14 @@ void CommandHandler::HandleChat()
 			dpp::message msg(Bot->ChannelId, Bot->Chat);
 			msg.set_guild_id(Bot->GuildId);
 			Bot->Chat = "";
-
-			DiscordBotStuff::SendMsg(msg);
+			try
+			{
+				DiscordBotStuff::SendMsg(msg);
+			}
+			catch (std::exception ex)
+			{
+				std::cout << "Message error AoTTG -> Discord: " << ex.what() << std::endl;
+			}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 	}
@@ -173,15 +179,6 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event)
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	
-	auto i = dpp::find_channel(781936292773888024);
-	for (auto o : i->get_voice_members())
-	{
-		auto member = dpp::find_guild_member(i->guild_id, o.first);
-
-		event.reply(member.nickname);
-
-	}
 
 }
 
@@ -335,40 +332,50 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 		Bot->Client.opJoinRoom(Target->getName());
 		bool createChannel = false;
 		auto guild = dpp::find_guild(event.msg.guild_id);
-
-		/*for (int i = 0; guild->channels.size() > i; i++)
+		dpp::snowflake parentId;
+		for (int i = 0; guild->channels.size() > i; i++)
 		{
-			auto channel = dpp::find_channel(i);
+			auto channel = dpp::find_channel(guild->channels[i]);
 
 
 			if (channel == NULL) continue;
-
-			if ((channel->name == "aottg rooms" || channel->name == "aottg room") && channel->is_category())
+			std::cout << channel->name << std::endl;
+			if ((Helpers::ToLower(channel->name) == "aottg rooms" || Helpers::ToLower(channel->name) == "aottg room") && channel->is_category())
 			{
 				createChannel = true;
+				parentId = channel->id;
 				break;
 			}
-			
-			for (auto i : channel->get_voice_members())
-			{
-				auto User = dpp::find_user(i.first);
-				std::cout << User->username << std::endl;
-
-			}
-
-
-
-		}*/
+		}
 
 		
 		if (!createChannel) return;
 
 		auto channel = dpp::channel();
 		channel.guild_id = event.msg.guild_id;
-		channel.name = Helpers::ToLower(std::regex_replace(Target->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""));
-		DiscordBotStuff().DiscordBot->channel_create(channel);
+		channel.name =  Helpers::Split(std::regex_replace(Target->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""),'`')[0];
+		channel.set_parent_id(parentId);
+
+			DiscordBotStuff().DiscordBot->channel_create(channel, [Bot](const dpp::confirmation_callback_t& event)
+				{
+					if (event.is_error())
+					{
+						std::cout << event.get_error().message << std::endl;
+						return;
+					}
+					//	std::cout << event.get<dpp::channel>().id << std:: endl;
+					Bot->ChannelId = event.get<dpp::channel>().id;
+					Bot->CreatedChannel = true;
+
+				});
+		
+		
+
+
 	}
 }
+
+
 void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 {
 	auto Bot = GetBot(event);
@@ -416,7 +423,20 @@ void CommandHandler::Disconnect(const dpp::message_create_t& event, std::string 
 	RemoveBot(Bot);
 	//delete Bot;
 
-	event.send("Disconnected");
+	event.send(Bot->CreatedChannel ? "Channel will get deleted in 5 seconds" : "Disconnected");
+	if (!Bot->CreatedChannel)		return;
+	
+	std::this_thread::sleep_for(std::chrono::seconds(5));
+
+	DiscordBotStuff().DiscordBot->channel_delete(event.msg.channel_id, [](const dpp::confirmation_callback_t& event)
+		{
+			if (event.is_error())
+			{
+				std::cout << event.get_error().message << std::endl;
+			}
+		});
+
+
 }
 
 void CommandHandler::Start(const dpp::message_create_t& event, std::string args)
