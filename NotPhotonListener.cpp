@@ -91,8 +91,8 @@ void NotPhotonListener::leaveRoomEventAction(int playerNr, bool isInactive)
 			std::cout << "Was still inside :lickge:" << std::endl;
 		}
 	}*/
-	std::cout << "Player " << playerNr << " left" << std::endl;
-	Chat += "[" + std::to_string(playerNr) + "]\tleft the Room";
+	//std::cout << "Player " << playerNr << " left" << std::endl;
+	Chat += "[" + std::to_string(playerNr) + "]	left the Room";
 }
 
 //InRoom Events

@@ -152,7 +152,7 @@ void CommandHandler::Meow(const dpp::message_create_t& event, std::string args)
 	event.send(result);
 }
 
-void CommandHandler::CreateRoom(const dpp::message_create_t& event)
+void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string args)
 {
 	return;
 	auto Bot = GetBot(event, true);
@@ -160,21 +160,25 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event)
 
 	ExitGames::Common::Hashtable Props;
 	Props.put("TestProp", "NoValue");
+	Props.put("password", "thisisapw");
 
-	ExitGames::LoadBalancing::RoomOptions T(true, true);
-	T.setLobbyType(NULL);
-	T.setMaxPlayers(20);
-	T.setCustomRoomProperties(Props);
-	T.setEmptyRoomTtl(-1);
-	T.setPlayerTtl(500);
-	ExitGames::Common::JVector<Common::JString> ListenRoomProps;
 
-	auto LongSTR = std::string(999, 'T');
-	ListenRoomProps.addElement(LongSTR.c_str());
+	ExitGames::LoadBalancing::RoomOptions roomoptions;
+	roomoptions.setLobbyType(NULL);
+	roomoptions.setMaxPlayers(20);
+	roomoptions.setCustomRoomProperties(Props);
+	roomoptions.setEmptyRoomTtl(-1);
+	roomoptions.setPlayerTtl(500);
 
-	T.setPropsListedInLobby(ListenRoomProps);
 
-	Bot->Client.opCreateRoom("FoodForCunts`The Forest III`normal`999999`day``4879", T);
+	ExitGames::Common::JVector<Common::JString> ListedProps;
+	ListedProps.addElement("HasPW");
+	ListedProps.addElement("baka");
+
+	roomoptions.setPropsListedInLobby(ListedProps);
+
+
+	Bot->Client.opCreateRoom("FoodForTesting`The Forest III`normal`999999`day``4879", roomoptions);
 }
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
@@ -329,6 +333,7 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 	if (Target != NULL)
 	{
 		std::cout << "joining" << std::endl;
+		
 		Bot->Client.opJoinRoom(Target->getName());
 		bool createChannel = false;
 		auto guild = dpp::find_guild(event.msg.guild_id);
@@ -353,7 +358,7 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 
 		auto channel = dpp::channel();
 		channel.guild_id = event.msg.guild_id;
-		channel.name =  Helpers::Split(std::regex_replace(Target->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""),'`')[0];
+		channel.name =  Helpers::TrimStartEnd(Helpers::Split(std::regex_replace(Target->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""),'`')[0]);
 		channel.set_parent_id(parentId);
 
 			DiscordBotStuff().DiscordBot->channel_create(channel, [Bot](const dpp::confirmation_callback_t& event)

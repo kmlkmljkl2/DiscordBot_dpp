@@ -29,4 +29,28 @@ public:
 		}
 		return seglist;
 	}
+	static std::string TrimBeginning(std::string& str)
+	{
+		if (str == "") return "";
+		while (str[0] == ' ')
+		{
+			str.erase(0, 1);
+		}
+		return str;
+	}
+	static std::string TrimEnd(std::string& str)
+	{
+		if (str == "") return "";
+		while (str[str.length() - 1] == ' ')
+		{
+			str.erase(str.length() - 1, 1);
+		}
+		return str;
+	}
+	static std::string TrimStartEnd(std::string& str)
+	{
+		TrimBeginning(str);
+		return TrimEnd(str);
+	}
+
 };

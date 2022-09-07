@@ -116,12 +116,20 @@ void InitCommands()
 	}
 	HelpMsg += "```";
 }
+void InitTestCommands()
+{
+	CommandList["createroom"] = Command(CommandHandler::CreateRoom, "Create da room", "create");
+
+}
 
 int main()
 {
 	DiscordBotStuff::Init();
 	CommandHandler::Init();
 	InitCommands();
+
+	//InitTestCommands();
+
 	Logger::LogDebug("Starting");
 
 	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());

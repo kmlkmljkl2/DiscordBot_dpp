@@ -47,7 +47,7 @@ public:
 	static void UrbanDictionary(const dpp::message_create_t& event, std::string args = "");
 	static void Ahegao(const dpp::message_create_t& event, std::string args = "");
 	static void Meow(const dpp::message_create_t& event, std::string args = "");
-	static void CreateRoom(const dpp::message_create_t& event);
+	static void CreateRoom(const dpp::message_create_t& event, std::string args = "");
 	static void Test(const dpp::message_create_t& event, std::string args = "");
 	static void Debug(const dpp::message_create_t& event, std::string args = "");
 	static void PlayerList(const dpp::message_create_t& event, std::string args = "");
