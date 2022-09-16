@@ -154,35 +154,37 @@ void CommandHandler::Meow(const dpp::message_create_t& event, std::string args)
 
 void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string args)
 {
-	return;
 	auto Bot = GetBot(event, true);
 	if (Bot == nullptr) return;
 
-	ExitGames::Common::Hashtable Props;
-	Props.put("TestProp", "NoValue");
-	Props.put("password", "thisisapw");
+	
 
 
 	ExitGames::LoadBalancing::RoomOptions roomoptions;
 	roomoptions.setLobbyType(NULL);
 	roomoptions.setMaxPlayers(20);
-	roomoptions.setCustomRoomProperties(Props);
-	roomoptions.setEmptyRoomTtl(-1);
-	roomoptions.setPlayerTtl(500);
 
 
+	auto props = Common::Hashtable();
+
+	//auto a = Common::JString(std::string(9999, 'T').c_str());
+
+	props.put("pw", "test");
+	roomoptions.setCustomRoomProperties(props);
 	ExitGames::Common::JVector<Common::JString> ListedProps;
-	ListedProps.addElement("HasPW");
-	ListedProps.addElement("baka");
+	ListedProps.addElement("pw");
 
 	roomoptions.setPropsListedInLobby(ListedProps);
 
 
-	Bot->Client.opCreateRoom("FoodForTesting`The Forest III`normal`999999`day``4879", roomoptions);
+	Bot->Client.opCreateRoom("FoodForTesting`The Forest III`normal`999999`day``205349876", roomoptions);
 }
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
+	auto Bot = GetBot(event, true);
+	if (Bot == nullptr) return;
+	
 
 }
 
@@ -344,7 +346,7 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 
 
 			if (channel == NULL) continue;
-			std::cout << channel->name << std::endl;
+		//	std::cout << channel->name << std::endl;
 			if ((Helpers::ToLower(channel->name) == "aottg rooms" || Helpers::ToLower(channel->name) == "aottg room") && channel->is_category())
 			{
 				createChannel = true;
@@ -390,6 +392,7 @@ void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 	for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
 	{
 		LoadBalancing::Room* room = Bot->Client.getRoomList()[i];
+
 		auto cleanname = std::regex_replace(room->getName().ANSIRepresentation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), "");
 		auto splitted = Helpers::Split(cleanname, '`');
 
@@ -410,6 +413,18 @@ void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 		RoomInfo += MaxPlayerCount + std::string(4 - MaxPlayerCount.size(), ' ') + "|";
 		RoomInfo += room->getIsOpen() ? "" : "CLOSED";
 		RoomInfo += splitted[5] == "" ? "" : R"([PWD])";
+		if (room->getCustomProperties().getSize() > 0)
+		{
+			RoomInfo += " { ";
+			for (int o = 0; room->getCustomProperties().getSize() > o; o++)
+			{
+				auto propname = room->getCustomProperties().getKeys()[o].toString().UTF8Representation().cstr();
+				auto propvalue = room->getCustomProperties()[o].toString().UTF8Representation().cstr();
+				RoomInfo += std::string(propname) + "," + std::string(propvalue) + " ";
+			}
+			RoomInfo += "} ";
+		}
+
 
 		List << RoomInfo << "\n";
 	}
@@ -485,16 +500,24 @@ Continue:
 	Bot->CreatorId = event.msg.author.id;
 	Bot->GuildId = event.msg.guild_id;
 	Bot->ChannelId = event.msg.channel_id;
-	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "crustycunt", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+
+
+	/*ExitGames::LoadBalancing::ConnectOptions options2(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "crustycunt");
+	
+	Bot->Client.connect(options2);*/
+
+
+
+	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrustyy"), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 	Bot->Client.connect(options);
 
-	std::cout << Bot << std::endl;
+	//std::cout << Bot << std::endl;
 	Bot->Client.getLocalPlayer().addCustomProperty("name", "NoodleDoodleTesting");
 	Bot->Client.getLocalPlayer().addCustomProperty("dead", true);
-	Bot->Client.getLocalPlayer().addCustomProperty("kills", 69);
+	Bot->Client.getLocalPlayer().addCustomProperty("kills", 0);
 	Bot->Client.getLocalPlayer().addCustomProperty("deaths", -1);
-	Bot->Client.getLocalPlayer().addCustomProperty("max_dmg", 420);
-	Bot->Client.getLocalPlayer().addCustomProperty("total_dmg", 420);
+	Bot->Client.getLocalPlayer().addCustomProperty("max_dmg", 0);
+	Bot->Client.getLocalPlayer().addCustomProperty("total_dmg", 0);
 	Bot->Client.getLocalPlayer().addCustomProperty("NoodleDoodle", "I'm a Discord Bot");
 
 	StoreVector.push_back(Bot);
@@ -505,6 +528,15 @@ Continue:
 		//Debug(event);
 		Disconnect(event);
 		return;
+	}
+	for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
+	{
+		auto room = Bot->Client.getRoomList()[i];
+		for (int o = 0; room->getCustomProperties().getSize() > o; o++)
+		{
+			std::cout << room->getCustomProperties()[o].toString().UTF8Representation().cstr() << std::endl;
+		}
+
 	}
 
 	List(event);

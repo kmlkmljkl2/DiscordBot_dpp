@@ -135,13 +135,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>CURL_STATICLIB</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)libdpp-10.0.16-win64\include\dpp-10.0;$(SolutionDir)curl-7.84.0\builds\libcurl-vc17-x64-debug-static-ipv6-sspi-schannel\include\curl;C:\Users\kevin\source\repos\c++Console\LoadBalancing-cpp\inc;$(SolutionDir)Common-cpp\inc;$(SolutionDir)LoadBalancing-cpp\inc;$(SolutionDir)Photon-cpp\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libdpp-10.0.19-win64\include\dpp-10.0;$(SolutionDir)curl-7.84.0\builds\libcurl-vc17-x64-debug-static-ipv6-sspi-schannel\include\curl;$(SolutionDir)LoadBalancing-cpp\inc;$(SolutionDir)Common-cpp\inc;$(SolutionDir)Photon-cpp\inc</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)libdpp-10.0.16-win64\lib\dpp-10.0;$(SolutionDir)curl-7.84.0\builds\libcurl-vc17-x64-debug-static-ipv6-sspi-schannel\lib;$(SolutionDir)Common-cpp\lib;$(SolutionDir)LoadBalancing-cpp\lib;$(SolutionDir)Photon-cpp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)libdpp-10.0.19-win64\lib\dpp-10.0;$(SolutionDir)curl-7.84.0\builds\libcurl-vc17-x64-debug-static-ipv6-sspi-schannel\lib;$(SolutionDir)Common-cpp\lib;$(SolutionDir)LoadBalancing-cpp\lib;$(SolutionDir)Photon-cpp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>dpp.lib;libcurl_a_debug.lib;Normaliz.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;LoadBalancing-cpp_debug_windows_md_x64.lib;Photon-cpp_vc16_debug_windows_md_x64.lib;LoadBalancing-cpp_debug_windows_md_x64.lib;Common-cpp_vc16_debug_windows_md_x64.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>

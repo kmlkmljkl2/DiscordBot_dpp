@@ -99,13 +99,14 @@ void InitCommands()
 	CommandList["list"] = Command(CommandHandler::List, "Gives you the Room list", "l");
 	CommandList["disconnect"] = Command(CommandHandler::Disconnect, "Disconnects the bot", "dc");
 	CommandList["ahegao"] = Command(CommandHandler::Ahegao, "best kind of gao");
-	CommandList["meow"] = Command(CommandHandler::Meow, "Meow");
+	CommandList["meow"] = Command(CommandHandler::Meow, "Meow", "miau");
 	CommandList["ud"] = Command(CommandHandler::UrbanDictionary, "Gets the Definition for the given term");
 	CommandList["next"] = Command(CommandHandler::Next, "Gives you the next definition given by -ud");
 	CommandList["back"] = Command(CommandHandler::Back, "Gives you the previous definition given by -ud");
-
 	CommandList["join"].RequireArgs = true;
 	CommandList["ud"].RequireArgs = true;
+
+	//CommandList.insert(std::pair<std::string, Command>("", Command()));
 
 	HelpMsg += "```";
 	for (auto i : CommandList)
@@ -128,7 +129,7 @@ int main()
 	CommandHandler::Init();
 	InitCommands();
 
-	//InitTestCommands();
+	InitTestCommands();
 
 	Logger::LogDebug("Starting");
 
