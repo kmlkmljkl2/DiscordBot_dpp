@@ -154,6 +154,7 @@ void CommandHandler::Meow(const dpp::message_create_t& event, std::string args)
 
 void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string args)
 {
+	return;
 	auto Bot = GetBot(event, true);
 	if (Bot == nullptr) return;
 
@@ -169,10 +170,12 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 	//auto a = Common::JString(std::string(9999, 'T').c_str());
 
-	props.put("pw", "test");
+	props.put("Private", "This Room is AoTTG2 password protected");
+	props.put("password", "test");
+
 	roomoptions.setCustomRoomProperties(props);
 	ExitGames::Common::JVector<Common::JString> ListedProps;
-	ListedProps.addElement("pw");
+	ListedProps.addElement("Private");
 
 	roomoptions.setPropsListedInLobby(ListedProps);
 
@@ -334,9 +337,18 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 
 	if (Target != NULL)
 	{
-		std::cout << "joining" << std::endl;
-		
-		Bot->Client.opJoinRoom(Target->getName());
+		for (int i = 0; Target->getCustomProperties().getSize() > i; i++)
+		{
+			auto& prop = Target->getCustomProperties().getKeys()[i];
+			//std::cout << prop.toString().UTF8Representation().cstr() << std::endl;
+			if (std::string(prop.toString().UTF8Representation().cstr()) == "\"Private\"")
+			{
+				event.reply("Use the nonexistent join method to join AoTTG2 passworded rooms");
+				return;
+			}
+
+		}
+		Bot->Client.opJoinRoom(Target->getName(), false, 0, Common::JVector<Common::JString>());
 		bool createChannel = false;
 		auto guild = dpp::find_guild(event.msg.guild_id);
 		dpp::snowflake parentId;
@@ -507,8 +519,8 @@ Continue:
 	Bot->Client.connect(options2);*/
 
 
-
-	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrustyy"), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+	std::string name = std::string("notsocrusty") /*+ std::to_string(1 + (rand() % 100))*/;
+	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID(name.c_str()), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 	Bot->Client.connect(options);
 
 	//std::cout << Bot << std::endl;

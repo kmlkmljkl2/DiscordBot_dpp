@@ -133,13 +133,15 @@ int main()
 
 	Logger::LogDebug("Starting");
 
-	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());
-	DiscordBotStuff::DiscordBot->on_message_create.attach(onMessage_Event);
+
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	
 	while (DiscordBotStuff::DiscordBot->token == "")
 	{
 		SLEEP(1000);
 	}
-
+	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());
+	DiscordBotStuff::DiscordBot->on_message_create.attach(onMessage_Event);
 	DiscordBotStuff::DiscordBot->start(false);
 }
 

@@ -52,7 +52,7 @@ namespace ExitGames
 			virtual bool opCreateRoom(const Common::JString& gameID=Common::JString(), const RoomOptions& options=RoomOptions(), const Common::JVector<Common::JString>& expectedUsers=Common::JVector<Common::JString>());
 			virtual bool opJoinOrCreateRoom(const Common::JString& gameID, const RoomOptions& options=RoomOptions(), int cacheSliceIndex=0, const Common::JVector<Common::JString>& expectedUsers=Common::JVector<Common::JString>());
 			virtual bool opJoinRandomOrCreateRoom(const Common::JString& gameID=Common::JString(), const RoomOptions& options=RoomOptions(), const Common::Hashtable& customRoomProperties=Common::Hashtable(), nByte maxPlayers=0, nByte matchmakingMode=MatchmakingMode::FILL_ROOM, const Common::JString& lobbyName=Common::JString(), nByte lobbyType=LobbyType::DEFAULT, const Common::JString& sqlLobbyFilter=Common::JString(), const Common::JVector<Common::JString>& expectedUsers=Common::JVector<Common::JString>());
-			virtual bool opJoinRoom(const Common::JString& gameID, bool rejoin=false, int cacheSliceIndex=0, const Common::JVector<Common::JString>& expectedUsers=Common::JVector<Common::JString>());
+			virtual bool opJoinRoom(const Common::JString& gameID, bool rejoin=false, int cacheSliceIndex=0, const Common::JVector<Common::JString>& expectedUsers=Common::JVector<Common::JString>(),const Common::JString& pw = "");
 			virtual bool opJoinRandomRoom(const Common::Hashtable& customRoomProperties=Common::Hashtable(), nByte maxPlayers=0, nByte matchmakingMode=MatchmakingMode::FILL_ROOM, const Common::JString& lobbyName=Common::JString(), nByte lobbyType=LobbyType::DEFAULT, const Common::JString& sqlLobbyFilter=Common::JString(), const Common::JVector<Common::JString>& expectedUsers=Common::JVector<Common::JString>());
 			virtual bool opLeaveRoom(bool willComeBack=false, bool sendAuthCookie=false);
 			template<typename Ftype> bool opRaiseEvent(bool reliable, const Ftype& parameters, nByte eventCode, const RaiseEventOptions& options=RaiseEventOptions());
@@ -148,9 +148,9 @@ namespace ExitGames
 			virtual Internal::MutableRoomFactory* getMutableRoomFactory(void) const;
 
 			// From Photon::PhotonListener
-			virtual void onEvent(const Photon::EventData& eventData);
 			virtual void onOperationResponse(const Photon::OperationResponse& operationResponse);
 			virtual void onStatusChanged(int statusCode);
+			virtual void onEvent(const Photon::EventData& eventData);
 			virtual void onPingResponse(const Common::JString& address, unsigned int result);
 			virtual void debugReturn(int debugLevel, const Common::JString& string);
 		private:
@@ -224,6 +224,8 @@ namespace ExitGames
 			Common::JString mCluster;
 			bool mUseAlternativePorts;
 			Internal::PuncherClient* mpPuncherClient;
+
+			Common::JString RoomPassword = "";
 
 			static const unsigned int M_PINGS_PER_REGION = 5;
 
