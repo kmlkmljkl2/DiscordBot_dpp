@@ -82,16 +82,52 @@ void onMessage_Event(const dpp::message_create_t& event)
 				break;
 			}
 			Logger::LogDebug("Executed Command " + i.first);
-			i.second.Method(event, EventArgs);
+			std::thread(i.second.Method, event, EventArgs).detach();
+			//i.second.Method(event, EventArgs);
 			break;
 		}
 	}
 	//Command Not Found
 };
+void onSlashCommand(const dpp::slashcommand_t& event)
+{
+	if (event.command.get_command_name() == "getusercreationtime")
+	{
+		auto& userid = std::get<dpp::snowflake>(event.get_parameter("user"));
+		auto guild = dpp::find_guild(event.command.guild_id);
+		auto user = dpp::find_guild_member(event.command.guild_id, userid);
+
+		auto Time = user.get_user()->get_creation_time();
+		std::time_t end_time = std::time_t(Time);
+		char Timeasd[40];
+		ctime_s(Timeasd, 40, &end_time);
+
+
+		event.reply(user.get_user()->username + ": " + std::string(Timeasd));
+	}
+}
+
+void onDiscordBotReady(const dpp::ready_t& event)
+{
+	if (dpp::run_once<struct register_bot_commands>())
+	{
+		dpp::slashcommand newcommand("Getusercreationtime", "Gets the Creation time of Animals that hide it from their profile", DiscordBotStuff::DiscordBot->me.id);
+			newcommand.add_option(
+				dpp::command_option(dpp::co_user, "user", "The type of animal", true)/*.
+				add_choice(dpp::command_option_choice("Dog", std::string("animal_dog"))).
+				add_choice(dpp::command_option_choice("Cat", std::string("animal_cat"))).
+				add_choice(dpp::command_option_choice("Penguin", std::string("animal_penguin")*/
+				//)
+				//)
+			);
+
+			/* Register the command */
+			DiscordBotStuff::DiscordBot->global_command_create(newcommand);
+	}
+}
 
 void InitCommands()
 {
-	CommandList["test"] = Command(CommandHandler::Test, "Testing stuff");
 	CommandList["start"] = Command(CommandHandler::Start, "Starts a BotInstance", "s");
 	CommandList["playerlist"] = Command(CommandHandler::PlayerList, "Gives you the Player list", "p");
 	CommandList["debug"] = Command(CommandHandler::Debug, "Debugging purposes");
@@ -119,8 +155,8 @@ void InitCommands()
 }
 void InitTestCommands()
 {
+	CommandList["test"] = Command(CommandHandler::Test, "Testing stuff");
 	CommandList["createroom"] = Command(CommandHandler::CreateRoom, "Create da room", "create");
-
 }
 
 int main()
@@ -128,10 +164,12 @@ int main()
 	DiscordBotStuff::Init();
 	CommandHandler::Init();
 	InitCommands();
-
+	//InitSlashcmds
 	InitTestCommands();
 
 	Logger::LogDebug("Starting");
+
+	
 
 
 	std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -140,10 +178,13 @@ int main()
 	{
 		SLEEP(1000);
 	}
+	DiscordBotStuff::DiscordBot->on_ready(onDiscordBotReady);
+	DiscordBotStuff::DiscordBot->on_slashcommand(onSlashCommand);
 	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());
 	DiscordBotStuff::DiscordBot->on_message_create.attach(onMessage_Event);
 	DiscordBotStuff::DiscordBot->start(false);
 }
+
 
 
 	

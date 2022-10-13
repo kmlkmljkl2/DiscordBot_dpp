@@ -154,7 +154,6 @@ void CommandHandler::Meow(const dpp::message_create_t& event, std::string args)
 
 void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string args)
 {
-	return;
 	auto Bot = GetBot(event, true);
 	if (Bot == nullptr) return;
 
@@ -185,10 +184,21 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	auto Bot = GetBot(event, true);
+	auto Bot = GetBot(event);
 	if (Bot == nullptr) return;
-	
+	auto mc = Bot->Client.getCurrentlyJoinedRoom().getPlayerForNumber(1);
 
+	//auto player = LoadBalancing::MutablePlayer(mc);
+
+
+
+	for (int i = 0; Bot->Client.getCurrentlyJoinedRoom().getCustomProperties().getSize() > i; i++)
+	{
+		auto name = Bot->Client.getCurrentlyJoinedRoom().getCustomProperties().getKeys()[i];
+
+		std::cout << name.toString().UTF8Representation().cstr() << " " << Bot->Client.getCurrentlyJoinedRoom().getCustomProperties()[i].toString().UTF8Representation().cstr() << std::endl;
+
+	}
 }
 
 void CommandHandler::Debug(const dpp::message_create_t& event, std::string args)
@@ -519,12 +529,14 @@ Continue:
 	Bot->Client.connect(options2);*/
 
 
-	std::string name = std::string("notsocrusty") /*+ std::to_string(1 + (rand() % 100))*/;
+	std::string name = std::string("notsocrusty") + std::to_string(1 + (rand() % 1000));
 	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID(name.c_str()), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 	Bot->Client.connect(options);
 
 	//std::cout << Bot << std::endl;
-	Bot->Client.getLocalPlayer().addCustomProperty("name", "NoodleDoodleTesting");
+
+	std::string InGameName = "NoodleDoodleTesting" + std::to_string(1 + (rand() % 1000));
+	Bot->Client.getLocalPlayer().addCustomProperty("name", InGameName.c_str());
 	Bot->Client.getLocalPlayer().addCustomProperty("dead", true);
 	Bot->Client.getLocalPlayer().addCustomProperty("kills", 0);
 	Bot->Client.getLocalPlayer().addCustomProperty("deaths", -1);
