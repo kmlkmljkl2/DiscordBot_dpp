@@ -1,6 +1,5 @@
 #include "CommandHandler.h"
 #include <dpp/dispatcher.h>
-#include <iostream>
 #include "curl.h"
 #include "nlohmann/json.hpp"
 #include <dpp/dpp.h>
@@ -15,6 +14,9 @@
 #include "Command.h"
 #include "UrbanDictionaryJson.h"
 #include "DiscordBotStuff.h"
+#include <stdio.h>
+#include <iostream>
+
 
 size_t CommandHandler::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
@@ -184,21 +186,12 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	auto Bot = GetBot(event);
-	if (Bot == nullptr) return;
-	auto mc = Bot->Client.getCurrentlyJoinedRoom().getPlayerForNumber(1);
-
-	//auto player = LoadBalancing::MutablePlayer(mc);
+	//auto guild = dpp::find_guild(event.msg.guild_id);
 
 
 
-	for (int i = 0; Bot->Client.getCurrentlyJoinedRoom().getCustomProperties().getSize() > i; i++)
-	{
-		auto name = Bot->Client.getCurrentlyJoinedRoom().getCustomProperties().getKeys()[i];
+	//DiscordBotStuff::DiscordBot->message_create(dpp::message(event.msg.channel_id,  ));
 
-		std::cout << name.toString().UTF8Representation().cstr() << " " << Bot->Client.getCurrentlyJoinedRoom().getCustomProperties()[i].toString().UTF8Representation().cstr() << std::endl;
-
-	}
 }
 
 void CommandHandler::Debug(const dpp::message_create_t& event, std::string args)
@@ -503,15 +496,15 @@ Continue:
 
 	Common::JString Ip = "";
 	args = Helpers::ToLower(args);
-	if (args == "eu")
+	/*if (args == "eu")
 		Ip = "135.125.239.180";
 	else if (args == "us")
 		Ip = "142.44.242.29";
 	else if (args == "asia")
 		Ip = "51.79.164.137";
 	else if (args == "sa")
-		Ip = "172.107.193.233";
-
+		Ip = "172.107.193.233";*/
+	Ip = "127.0.0.1";
 	if (Ip == "")
 	{
 		event.send("Enter a valid Region!");
@@ -586,4 +579,186 @@ void CommandHandler::Back(const dpp::message_create_t& event, std::string args)
 	if (definition == "") return;
 
 	event.send(definition);
+}
+
+void CommandHandler::JoinVC(const dpp::message_create_t& event, std::string args)
+{
+	dpp::guild* g = dpp::find_guild(event.msg.guild_id);
+	auto current_vc = event.from->get_voice(event.msg.guild_id);
+	bool join_vc = true;
+	/* Check if we are currently on any vc */
+	if (current_vc)
+	{
+		/* Find the channel id  that the user is currently on */
+		auto users_vc = g->voice_members.find(event.msg.author.id);
+		/* See if we currently share a channel with the user */
+		if (users_vc != g->voice_members.end() && current_vc->channel_id == users_vc->second.channel_id) 
+		{
+			join_vc = false;
+			/* We are on this voice channel, at this point we can send any audio instantly to vc:
+
+			 * current_vc->send_audio_raw(...)
+			 */
+		}
+		else 
+		{
+			/* We are on a different voice channel. Leave it, then join the new one
+			 * by falling through to the join_vc branch below.
+			 */
+			/*event.from->disconnect_voice(event.msg.guild_id);
+			join_vc = true;*/
+			DiscordBotStuff::DiscordBot->message_create(dpp::message(event.msg.channel_id, "I'm already in a VoiceChannel"));
+			return;
+		}
+	}
+	/* If we need to join a vc at all, join it here if join_vc == true */
+	if (join_vc) 
+	{
+		if (!g->connect_member_voice(event.msg.author.id)) 
+		{
+			/* The user issuing the command is not on any voice channel, we can't do anything */
+			DiscordBotStuff::DiscordBot->message_create(dpp::message(event.msg.channel_id, "You don't seem to be on a voice channel! :("));
+		}
+		else 
+		{
+			/* We are now connecting to a vc. Wait for on_voice_ready
+			 * event, and then send the audio within that event:
+			 *
+			 * event.voice_client->send_audio_raw(...);
+			 *
+			 * NOTE: We can't instantly send audio, as we have to wait for
+			 * the connection to the voice server to be established!
+			 */
+		}
+	}
+}
+
+void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string args)
+{
+	dpp::guild* g = dpp::find_guild(event.msg.guild_id);
+	auto current_vc = event.from->get_voice(event.msg.guild_id);
+	auto users_vc = g->voice_members.find(event.msg.author.id);
+	if (current_vc->channel_id == users_vc->second.channel_id)
+	{
+		event.from->disconnect_voice(event.msg.guild_id);
+	}
+
+}
+#include <Windows.h>
+
+void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
+{
+	//std::string args = "https://www.youtube.com/watch?v=3Pf9h_Rl7i4";
+
+	if (args.find("youtu") == std::string::npos)
+	{
+		return;
+	}
+
+	std::string ar = "cmd.exe /c youtube-dl -f bestaudio[ext=m4a] -q --ignore-errors -o - \"";
+	ar = ar + args;
+	ar = ar + "\" | ffmpeg -err_detect ignore_err -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel quiet";
+
+
+	
+	//const_cast<LPSTR>(ar.c_str())
+
+	SECURITY_ATTRIBUTES sa;
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = TRUE;
+	sa.lpSecurityDescriptor = NULL;
+
+	// Create the child output pipe.
+	HANDLE hChildStdoutRd, hChildStdoutWr;
+	CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &sa, 0);
+
+	// Set the handle as inheritable.
+	SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0);
+
+	// Create the child input pipe.
+	HANDLE hChildStdinRd, hChildStdinWr;
+	CreatePipe(&hChildStdinRd, &hChildStdinWr, &sa, 0);
+
+	// Set the handle as inheritable.
+	SetHandleInformation(hChildStdinWr, HANDLE_FLAG_INHERIT, 0);
+
+	// Set up the start up info struct.
+	STARTUPINFO si;
+	ZeroMemory(&si, sizeof(STARTUPINFO));
+	si.cb = sizeof(STARTUPINFO);
+	si.hStdError = hChildStdoutWr;
+	si.hStdOutput = hChildStdoutWr;
+	si.hStdInput = hChildStdinRd;
+	si.dwFlags |= STARTF_USESTDHANDLES;
+
+	// Create the child process.
+	PROCESS_INFORMATION pi;
+	CreateProcess(NULL, const_cast<LPSTR>(ar.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+
+	// Close the write end of the pipes.
+	CloseHandle(hChildStdoutWr);
+	CloseHandle(hChildStdinRd);
+
+	// Read the output from the child process.
+	char buffer[100];
+	DWORD bytesRead;
+
+	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
+
+	std::vector<char> output;
+	while (ReadFile(hChildStdoutRd, buffer, 100, &bytesRead, NULL) && bytesRead > 0)
+	{
+		output.insert(output.end(), buffer, buffer + bytesRead);
+
+		if (output.size() > 230400)
+		{
+			if (v && v->voiceclient && v->voiceclient->is_ready()) {
+				v->voiceclient->send_audio_raw((uint16_t*)output.data(), output.size());
+				output.clear();
+			}
+		}
+	}
+	if (v && v->voiceclient && v->voiceclient->is_ready()) 
+	{
+		v->voiceclient->send_audio_raw((uint16_t*)output.data(), output.size());
+	}
+	output.clear();
+
+
+	// Close the handles.
+	CloseHandle(hChildStdoutRd);
+	CloseHandle(hChildStdinWr);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	//auto a = system("start cmd /c dir");
+
+
+
+
+
+
+	
 }

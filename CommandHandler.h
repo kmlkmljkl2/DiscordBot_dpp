@@ -57,4 +57,9 @@ public:
 	static void Start(const dpp::message_create_t& event, std::string args = "");
 	static void Next(const dpp::message_create_t& event, std::string args = "");
 	static void Back(const dpp::message_create_t& event, std::string args = "");
+
+
+	static void JoinVC(const dpp::message_create_t& event, std::string args = "");
+	static void LeaveVC(const dpp::message_create_t& event, std::string args = "");
+	static void Play(const dpp::message_create_t& event, std::string args = "");
 };

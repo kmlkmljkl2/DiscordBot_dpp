@@ -191,7 +191,13 @@
     <ClCompile Include="UrbanDictionaryJson.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ffmpeg.exe">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="packages.config" />
+    <None Include="youtube-dl.exe">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Command.h" />

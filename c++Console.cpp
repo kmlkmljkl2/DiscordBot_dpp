@@ -141,7 +141,10 @@ void InitCommands()
 	CommandList["back"] = Command(CommandHandler::Back, "Gives you the previous definition given by -ud");
 	CommandList["join"].RequireArgs = true;
 	CommandList["ud"].RequireArgs = true;
-
+	CommandList["vc"] = Command(CommandHandler::JoinVC, "Joins the VoiceChat");
+	CommandList["leave"] = Command(CommandHandler::LeaveVC, "Joins the VoiceChat");
+	CommandList["play"] = Command(CommandHandler::Play, "Plays a YouTube link");
+	CommandList["play"].RequireArgs = true;
 	//CommandList.insert(std::pair<std::string, Command>("", Command()));
 
 	HelpMsg += "```";
@@ -161,6 +164,9 @@ void InitTestCommands()
 
 int main()
 {
+	//CommandHandler::Play();
+
+	//return 0;
 	DiscordBotStuff::Init();
 	CommandHandler::Init();
 	InitCommands();

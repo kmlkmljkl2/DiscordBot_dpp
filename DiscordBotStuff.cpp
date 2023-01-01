@@ -6,7 +6,7 @@ void DiscordBotStuff::Init()
 {
 	std::string Tokenstring;
 	std::ifstream myfile;
-	myfile.open("C:/Users/kevin/source/repos/c++Console/Discord.txt");
+	myfile.open("D:/GitHub_repos/DiscordBot_dpp/Discord.txt");
 	if (myfile.is_open())
 	{
 		std::getline(myfile, Tokenstring); // gets first line
