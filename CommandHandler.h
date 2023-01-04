@@ -3,6 +3,7 @@
 #include <dpp/dispatcher.h>
 #include "NotPhotonListener.h"
 #include "UrbanDictionaryJson.h"
+#include <dpp/dpp.h>
 
 static class CommandHandler
 {

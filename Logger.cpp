@@ -4,6 +4,8 @@
 
 static class Logger
 {
+	static inline bool logDebug = true;
+
 	static std::string GetTime()
 	{
 		time_t result = time(NULL);
@@ -20,6 +22,7 @@ public:
 
 	static void LogDebug(std::string message)
 	{
+		if (!logDebug) return;
 		std::cout << "[" << GetTime() << "]  " << "(DEBUG)" << "\t" << message << std::endl;
 	}
 	static void LogWarning(std::string message)
