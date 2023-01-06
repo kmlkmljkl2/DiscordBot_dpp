@@ -643,23 +643,72 @@ void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string arg
 	}
 
 }
+
+
+
 #include <Windows.h>
 void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 {
-	//std::string args = "https://www.youtube.com/watch?v=3Pf9h_Rl7i4";
 	if (args.find("youtu") == std::string::npos)
 	{
 		return;
 	}
+	std::string ar = "cmd.exe /c  youtube-dl -f bestaudio -q --ignore-errors -o - \"";
+	ar = ar + args; //-err_detect ignore_err 
+	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
+		ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16 -c:a libopus"; //-qscale:a 3 -f ogv output.ogv
+		//-c:a libopus
 
-	std::string ar = "cmd.exe /c youtube-dl -f bestaudio[ext=m4a] -q --ignore-errors -o - \"";
-	ar = ar + args;
-	ar = ar + "\" | ffmpeg -err_detect ignore_err -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel quiet"; //-qscale:a 3 -f ogv output.ogv
+	
+	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
 
+	byte buzzer[13000];
 
+	auto pipe = _popen(ar.c_str(), "rb");
+	if (!pipe) {
+		std::cout << "Failed to open Pipe" << std::endl;
+		return;
+	}
 
-	//const_cast<LPSTR>(ar.c_str())
+	while (true) 
+	{
+		auto bytes_read = fread(buzzer, 1, 11520, pipe);
+		if (bytes_read == 0)
+		{
+			std::cout << "End reached" << std::endl;
+			break;
+		}
+		/*result.reserve(result.size() + bytes_read);
+		result.append(reinterpret_cast<char*>(buzzer), bytes_read);*/
+		//std::cout << bytes_read << std::endl;
+		if (bytes_read < 11520)
+		{
+			std::cout << "11520 was bigger than bytes read: " << bytes_read << std::endl;
+			continue;
+		}
+		if (v && v->voiceclient && v->voiceclient->is_ready())
+		{
+			try
+			{
+				v->voiceclient->send_audio_raw((uint16_t*)buzzer, bytes_read);
+			}
+			catch (std::exception ex)
+			{
+				std::cout << ex.what() << std::endl;
+			}
 
+		}
+		
+	}
+	
+	_pclose(pipe);
+	/*if (v && v->voiceclient && v->voiceclient->is_ready())
+	{
+		v->voiceclient->send_audio_raw((uint16_t*)result.data(), result.size());
+
+	}*/
+
+	return;
 	SECURITY_ATTRIBUTES sa;
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.bInheritHandle = TRUE;
@@ -695,21 +744,15 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 	// Close the write end of the pipes.
 	CloseHandle(hChildStdoutWr);
 	CloseHandle(hChildStdinRd);
-
+	SLEEP(2000);
 	// Read the output from the child process.
-
-	char buffer[40960];
+	char buffer[8192];
 	DWORD bytesRead;
 
-
-
-	//std::vector<unsigned char> output;
 	std::string out;
-	std::ofstream outfile("output.txt");
 
 	while (ReadFile(hChildStdoutRd, buffer, 8192, &bytesRead, NULL))
 	{
-		outfile << "Number of bytes read " << bytesRead << " compared to how big the buffer is: " << sizeof(buffer) << std::endl;
 		out.reserve(out.size() + bytesRead);
 		out.append(buffer, bytesRead);
 
@@ -722,19 +765,14 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 			std::string packet(out.substr(0, 11520));
 			out.erase(out.begin(), out.begin() + 11520);
 
-			try
-			{
+			
 				v->voiceclient->send_audio_raw((uint16_t*)packet.data(), packet.size());
-			}
-			catch (std::exception& e)
-			{
-				std::cout << e.what() << std::endl;
-				out = packet + out;
-			}
+			
+			
 
 		}
 	}
-	while (out.size() > 100)
+	while (out.size() > 200)
 	{
 		dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
 		if (v && v->voiceclient && v->voiceclient->is_ready())
@@ -743,14 +781,9 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 			{
 				std::string packet(out.substr(0, 11520));
 				out.erase(out.begin(), out.begin() + 11520);
-				try
-				{
+				
 					v->voiceclient->send_audio_raw((uint16_t*)packet.data(), packet.size());
-				}
-				catch (std::exception& e)
-				{
-					std::cout << e.what() << std::endl;
-				}
+				
 			}
 			else
 			{
@@ -768,16 +801,11 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 		}
 
 	}
-	/*if (!probablyErrored)
+	if (out.size() > 0)
 	{
-		if (v && v->voiceclient && v->voiceclient->is_ready())
-		{
-			v->voiceclient->send_audio_raw((uint16_t*)out.data(), out.size());
-		}
-	}*/
+		std::cout << out << std::endl;
+	}
 
-	outfile.close();
-	// Close the handles.
 	CloseHandle(hChildStdoutRd);
 	CloseHandle(hChildStdinWr);
 	CloseHandle(pi.hProcess);
