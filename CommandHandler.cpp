@@ -649,20 +649,27 @@ void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string arg
 #include <Windows.h>
 void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 {
-	if (args.find("youtu") == std::string::npos)
+	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
+	if (!v)
 	{
+		event.reply("I'm not inside a VoiceChat yet");
+		return;
+	}
+
+	if (args.find("youtu") == std::string::npos || args.find(" ") != std::string::npos)
+	{
+		event.reply("Invalid URL ||whitespaces are not allowed||");
 		return;
 	}
 	std::string ar = "cmd.exe /c  youtube-dl -f bestaudio -q --ignore-errors -o - \"";
 	ar = ar + args; //-err_detect ignore_err 
 	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
-		ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16 -c:a libopus"; //-qscale:a 3 -f ogv output.ogv
+		ar = ar + "\" | ffmpeg -thread_queue_size 11520 -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1"; //-qscale:a 3 -f ogv output.ogv
 		//-c:a libopus
 
 	
-	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
-
-	byte buzzer[13000];
+	v->voiceclient->set_send_audio_type(v->voiceclient->satype_live_audio);
+	byte buzzer[11520];
 
 	auto pipe = _popen(ar.c_str(), "rb");
 	if (!pipe) {
@@ -698,7 +705,7 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 			}
 
 		}
-		
+		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(46.0049));
 	}
 	
 	_pclose(pipe);
