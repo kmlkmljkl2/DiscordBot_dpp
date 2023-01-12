@@ -4,6 +4,7 @@
 #include "NotPhotonListener.h"
 #include "UrbanDictionaryJson.h"
 #include <dpp/dpp.h>
+#include "PlaybackHandler.h"
 
 static class CommandHandler
 {
@@ -39,7 +40,7 @@ private:
 		"Disconnected"
 	};
 	static void HandleChat();
-
+	inline static std::map<dpp::snowflake, PlaybackHandler*> MusicPlayers;
 public:
 	static inline UrbanDictionaryJson Definitions;
 	inline static std::vector<NotPhotonListener*> StoreVector;

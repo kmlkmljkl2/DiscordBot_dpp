@@ -142,7 +142,7 @@ void InitCommands()
 	CommandList["join"].RequireArgs = true;
 	CommandList["ud"].RequireArgs = true;
 	CommandList["vc"] = Command(CommandHandler::JoinVC, "Joins the VoiceChat");
-	CommandList["leave"] = Command(CommandHandler::LeaveVC, "Joins the VoiceChat");
+	CommandList["leave"] = Command(CommandHandler::LeaveVC, "Leaves the VoiceChat");
 	CommandList["play"] = Command(CommandHandler::Play, "Plays a YouTube link");
 	CommandList["play"].RequireArgs = true;
 	//CommandList.insert(std::pair<std::string, Command>("", Command()));
