@@ -1,5 +1,54 @@
 #include "PlaybackHandler.h"
 
+std::string PlaybackHandler::GetLength(std::string url)
+{
+	std::string ar = "cmd.exe /c  youtube-dl \"";
+	ar = ar + url; 
+	ar = ar + "\" --get-duration";
+
+
+	byte buzzer[100];
+	auto pipe = _popen(ar.c_str(), "rb");
+	if (!pipe) {
+		std::cout << "Failed to open Pipe" << std::endl;
+		return "";
+	}
+	size_t bytes_read;
+	std::string Length;
+	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
+	{
+		Length = std::string((char*)buzzer, bytes_read);
+	}
+	_pclose(pipe);
+	return Length;
+}
+
+std::string PlaybackHandler::GetName(std::string url)
+{
+	std::string ar = "cmd.exe /c  youtube-dl \"";
+	ar = ar + url; //-err_detect ignore_err 
+	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
+	ar = ar + "\" --get-title"; //-qscale:a 3 -f ogv output.ogv
+	//-c:a libopus
+
+
+	byte buzzer[100];
+	auto pipe = _popen(ar.c_str(), "rb");
+	if (!pipe) {
+		std::cout << "Failed to open Pipe" << std::endl;
+		return "";
+	}
+	size_t bytes_read;
+	std::string Length;
+	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
+	{
+		Length = std::string((char*)buzzer, bytes_read);
+
+	}
+	_pclose(pipe);
+	return Length;
+}
+
 PlaybackHandler::PlaybackHandler(dpp::discord_client* client, dpp::snowflake guild) : Client(client), TargetGuild(guild)
 {
 	if (!guild)
@@ -15,7 +64,9 @@ PlaybackHandler::~PlaybackHandler()
 
 void PlaybackHandler::Add(std::string url)
 {
-	Queue.push_back(url);
+	auto length = GetLength(url);
+	auto name = GetName(url);
+	Queue.push_back(YoutubeMusicObject(url, name.erase(name.length() - 1), length.erase(length.length() - 1)));
 	TryPlay();
 	/*for (auto i : Queue)
 	{
@@ -25,6 +76,7 @@ void PlaybackHandler::Add(std::string url)
 
 void PlaybackHandler::Remove(int index)
 {
+	index = index - 1;
 	if (index > Queue.size())
 		return;
 
@@ -53,8 +105,9 @@ void PlaybackHandler::TryPlay()
 
 	while (Queue.size() > 0)
 	{
+
 		std::string ar = "cmd.exe /c  youtube-dl -f bestaudio -q --ignore-errors -o - \"";
-		ar = ar + Queue[0]; //-err_detect ignore_err 
+		ar = ar + Queue[0].Url; //-err_detect ignore_err 
 		//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
 		ar = ar + "\" | ffmpeg -thread_queue_size 11520 -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic"; //-qscale:a 3 -f ogv output.ogv
 		//-c:a libopus
@@ -67,12 +120,20 @@ void PlaybackHandler::TryPlay()
 			return;
 		}
 		bool errored = true;
-
+		Skipping = false;
 		size_t bytes_read;
+		StartTime = std::chrono::high_resolution_clock::now();
 		while ((bytes_read = fread(buzzer, 1, 11520, pipe)) > 0)
 		{
 			if (Stopping)
 				break;
+			if (Skipping)
+				break;
+			if (Pausing)
+			{
+				std::this_thread::sleep_for(std::chrono::duration<double>(1));
+				continue;
+			}
 			v = Client->get_voice(TargetGuild);
 			if (bytes_read < 11520)
 			{
@@ -219,4 +280,55 @@ void PlaybackHandler::Stop()
 {
 	Stopping = true;
 	Queue.clear();
+}
+
+void PlaybackHandler::Pause()
+{
+	Pausing = true;
+}
+
+void PlaybackHandler::Resume()
+{
+	Pausing = false;
+}
+
+void PlaybackHandler::Skip()
+{
+	Skipping = true;
+}
+
+std::string PlaybackHandler::QueueString()
+{
+	std::string result = "```";
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(stop - StartTime).count();
+	int hours = elapsedSeconds / 3600;
+	int minutes = elapsedSeconds / 60;
+	int seconds = elapsedSeconds % 60;
+	
+	bool first = true;
+	int numba = 1;
+	for (auto& i : Queue)
+	{
+		if (first)
+			result += "[" + (std::string)(Queue.size() > 9 ? "0" : "") + std::to_string(numba++) + "]Playing now => ";
+		else
+			result += std::string(18, ' ');
+		int spaces = 50 - i.Name.size();
+		result += i.Name + (spaces > 0 ? std::string(spaces, ' ') : "") + " ";
+		
+		if (first)
+			result += "[" + (hours == 0 ? "" : std::to_string(hours) + ":") + (minutes == 0 ? "00" : minutes > 10 ? std::to_string(minutes) : "0" + std::to_string(minutes)) + ":" + (seconds == 0 ? "00" : seconds > 10 ? std::to_string(seconds) : "0" + std::to_string(seconds)) + "/" + i.Duration + "]";
+		else
+			result += "[" + i.Duration + "]";
+		result += "\n";
+
+		first = false;
+	}
+	result += "```";
+	 //std::string(20 - Stats.size(), ' ');
+	if (result == "``````")
+		return "Queue is empty";
+
+	return result;
 }

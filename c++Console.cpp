@@ -145,6 +145,16 @@ void InitCommands()
 	CommandList["leave"] = Command(CommandHandler::LeaveVC, "Leaves the VoiceChat");
 	CommandList["play"] = Command(CommandHandler::Play, "Plays a YouTube link");
 	CommandList["play"].RequireArgs = true;
+	CommandList["skip"] = Command(CommandHandler::Skip, "Skips the currently playing Song");
+	CommandList["resume"] = Command(CommandHandler::Resume, "Resumes to playing music after it was Paused by Pause");
+	CommandList["pause"] = Command(CommandHandler::Pause, "Pauses the currently playing Music");
+	CommandList["queue"] = Command(CommandHandler::Queue, "Returns the current Music Queue");
+	CommandList["remove"] = Command(CommandHandler::Remove, "Removes one Index given by -queue");
+
+
+
+
+
 	//CommandList.insert(std::pair<std::string, Command>("", Command()));
 
 	HelpMsg += "```";

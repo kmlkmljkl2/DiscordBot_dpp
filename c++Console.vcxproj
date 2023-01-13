@@ -209,6 +209,7 @@
     <ClInclude Include="NotPhotonListener.h" />
     <ClInclude Include="PlaybackHandler.h" />
     <ClInclude Include="UrbanDictionaryJson.h" />
+    <ClInclude Include="YoutubeMusicObject.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -41,6 +41,7 @@ private:
 	};
 	static void HandleChat();
 	inline static std::map<dpp::snowflake, PlaybackHandler*> MusicPlayers;
+	static bool SameVoiceChat(const dpp::message_create_t& event);
 public:
 	static inline UrbanDictionaryJson Definitions;
 	inline static std::vector<NotPhotonListener*> StoreVector;
@@ -64,4 +65,9 @@ public:
 	static void JoinVC(const dpp::message_create_t& event, std::string args = "");
 	static void LeaveVC(const dpp::message_create_t& event, std::string args = "");
 	static void Play(const dpp::message_create_t& event, std::string args = "");
+	static void Skip(const dpp::message_create_t& event, std::string args = "");
+	static void Resume(const dpp::message_create_t& event, std::string args = "");
+	static void Pause(const dpp::message_create_t& event, std::string args = "");
+	static void Queue(const dpp::message_create_t& event, std::string args = "");
+	static void Remove(const dpp::message_create_t& event, std::string args = "");
 };

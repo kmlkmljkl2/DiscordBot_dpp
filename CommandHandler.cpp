@@ -108,6 +108,18 @@ void CommandHandler::HandleChat()
 	}
 }
 
+bool CommandHandler::SameVoiceChat(const dpp::message_create_t& event)
+{
+	dpp::guild* g = dpp::find_guild(event.msg.guild_id);
+
+	if (!g) return false;
+	auto current_vc = event.from->get_voice(event.msg.guild_id);
+	if (!current_vc) return false;
+	auto users_vc = g->voice_members.find(event.msg.author.id);
+
+	return current_vc->channel_id == users_vc->second.channel_id;
+}
+
 void CommandHandler::Init()
 {
 	std::thread(HandleChat).detach();
@@ -185,11 +197,28 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	//auto guild = dpp::find_guild(event.msg.guild_id);
+	std::string ar = "cmd.exe /c  youtube-dl \"";
+	ar = ar + args; //-err_detect ignore_err 
+	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
+	ar = ar + "\" --get-title"; //-qscale:a 3 -f ogv output.ogv
+	//-c:a libopus
 
 
+	byte buzzer[100];
+	auto pipe = _popen(ar.c_str(), "rb");
+	if (!pipe) {
+		std::cout << "Failed to open Pipe" << std::endl;
+		return;
+	}
+	bool errored = true;
+	size_t bytes_read;
+	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
+	{
+		std::string Length((char*)buzzer, bytes_read);
+		std::cout << "(" << bytes_read << ") " << Length << std::endl;
 
-	//DiscordBotStuff::DiscordBot->message_create(dpp::message(event.msg.channel_id,  ));
+	}
+	_pclose(pipe);
 
 }
 
@@ -634,11 +663,9 @@ void CommandHandler::JoinVC(const dpp::message_create_t& event, std::string args
 
 void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string args)
 {
-	dpp::guild* g = dpp::find_guild(event.msg.guild_id);
-	auto current_vc = event.from->get_voice(event.msg.guild_id);
-	auto users_vc = g->voice_members.find(event.msg.author.id);
-	if (current_vc->channel_id == users_vc->second.channel_id)
+	if (SameVoiceChat(event))
 	{
+		auto current_vc = event.from->get_voice(event.msg.guild_id);
 		current_vc->voiceclient->stop_audio();
 		event.from->disconnect_voice(event.msg.guild_id);
 		if (MusicPlayers.count(event.msg.guild_id) == 0)
@@ -656,6 +683,8 @@ void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string arg
 #include <Windows.h>
 void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 {
+	if (!SameVoiceChat(event)) return;
+
 	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
 	if (!v)
 	{
@@ -674,4 +703,69 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 
 	MusicPlayers[event.msg.guild_id]->Add(args);
 }
+
+void CommandHandler::Skip(const dpp::message_create_t& event, std::string args)
+{
+	if (!SameVoiceChat(event)) return;
+
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	MusicPlayers[event.msg.guild_id]->Skip();
+	auto current_vc = event.from->get_voice(event.msg.guild_id);
+	if (current_vc)
+	{
+		current_vc->voiceclient->stop_audio();
+	}
+}
+
+void CommandHandler::Resume(const dpp::message_create_t& event, std::string args)
+{
+	if (!SameVoiceChat(event)) return;
+
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	MusicPlayers[event.msg.guild_id]->Resume();
+
+}
+
+void CommandHandler::Pause(const dpp::message_create_t& event, std::string args)
+{
+	if (!SameVoiceChat(event)) return;
+
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	MusicPlayers[event.msg.guild_id]->Pause();
+}
+
+void CommandHandler::Queue(const dpp::message_create_t& event, std::string args)
+{
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	event.send(MusicPlayers[event.msg.guild_id]->QueueString());
+
+}
+
+void CommandHandler::Remove(const dpp::message_create_t& event, std::string args)
+{
+	if (!SameVoiceChat(event)) return;
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+
+	try {
+		int num = std::stoi(args);
+		if (1 > num)
+			return;
+		if (num == 1)
+		{
+			event.reply("Cannot remove currently playing song");
+			return;
+		}
+		MusicPlayers[event.msg.guild_id]->Remove(num);
+
+	}
+	catch (const std::invalid_argument& e) {
+		// Conversion failed
+		event.reply("Invalid input");
+	}
+
+}
+
+
+
+
 
