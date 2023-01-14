@@ -2,6 +2,7 @@
 #include "dpp/dpp.h"
 #include "DiscordBotStuff.h"
 #include "YoutubeMusicObject.h"
+#include "Helpers.h"
 class PlaybackHandler
 {
 private:
@@ -15,6 +16,7 @@ private:
 	std::string GetLength(std::string url);
 	std::chrono::high_resolution_clock::time_point StartTime;
 	std::string GetName(std::string url);
+	void HandlePlaylist(std::string url);
 public:
 	PlaybackHandler(dpp::discord_client* client, dpp::snowflake guild);
 	~PlaybackHandler();

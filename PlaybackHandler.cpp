@@ -49,6 +49,38 @@ std::string PlaybackHandler::GetName(std::string url)
 	return Length;
 }
 
+void PlaybackHandler::HandlePlaylist(std::string url)
+{
+	std::string ar = "cmd.exe /c  youtube-dl \"";
+	ar = ar + url; //-err_detect ignore_err 
+	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
+	ar = ar + "\" --get-id"; //-qscale:a 3 -f ogv output.ogv
+	//-c:a libopus
+
+
+	byte buzzer[500];
+	auto pipe = _popen(ar.c_str(), "rb");
+	if (!pipe) {
+		std::cout << "Failed to open Pipe" << std::endl;
+		return;
+	}
+	size_t bytes_read;
+	std::string Length;
+	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
+	{
+		Length += std::string((char*)buzzer, bytes_read);
+
+	}
+	_pclose(pipe);
+	std::string baseUrl = "https://www.youtube.com/watch?v=";
+	auto result = Helpers::Split(Length, '\n');
+	for (auto& i : result)
+	{
+		std::cout << i << std::endl;
+		Add(baseUrl + i);
+	}
+}
+
 PlaybackHandler::PlaybackHandler(dpp::discord_client* client, dpp::snowflake guild) : Client(client), TargetGuild(guild)
 {
 	if (!guild)
@@ -64,6 +96,12 @@ PlaybackHandler::~PlaybackHandler()
 
 void PlaybackHandler::Add(std::string url)
 {
+	if (url.find("list=") != std::string::npos)
+	{
+		HandlePlaylist(url);
+		return;
+	}
+
 	auto length = GetLength(url);
 	auto name = GetName(url);
 	Queue.push_back(YoutubeMusicObject(url, name.erase(name.length() - 1), length.erase(length.length() - 1)));
@@ -299,36 +337,44 @@ void PlaybackHandler::Skip()
 
 std::string PlaybackHandler::QueueString()
 {
-	std::string result = "```";
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(stop - StartTime).count();
-	int hours = elapsedSeconds / 3600;
-	int minutes = elapsedSeconds / 60;
-	int seconds = elapsedSeconds % 60;
-	
-	bool first = true;
-	int numba = 1;
-	for (auto& i : Queue)
+	try
 	{
-		if (first)
-			result += "[" + (std::string)(Queue.size() > 9 ? "0" : "") + std::to_string(numba++) + "]Playing now => ";
-		else
-			result += std::string(18, ' ');
-		int spaces = 50 - i.Name.size();
-		result += i.Name + (spaces > 0 ? std::string(spaces, ' ') : "") + " ";
-		
-		if (first)
-			result += "[" + (hours == 0 ? "" : std::to_string(hours) + ":") + (minutes == 0 ? "00" : minutes > 10 ? std::to_string(minutes) : "0" + std::to_string(minutes)) + ":" + (seconds == 0 ? "00" : seconds > 10 ? std::to_string(seconds) : "0" + std::to_string(seconds)) + "/" + i.Duration + "]";
-		else
-			result += "[" + i.Duration + "]";
-		result += "\n";
+		std::string result = "```";
+		auto stop = std::chrono::high_resolution_clock::now();
+		auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(stop - StartTime).count();
+		int hours = elapsedSeconds / 3600;
+		int minutes = elapsedSeconds / 60;
+		int seconds = elapsedSeconds % 60;
 
-		first = false;
+		bool first = true;
+		int numba = 1;
+		for (auto& i : Queue)
+		{
+			if (first)
+				result += "Playing =>   ";
+			
+				result += (first ? "" : std::string(13, ' ')) + "[" + (std::string)(Queue.size() > 9 && numba < 10 ? "0" : "") + std::to_string(numba++) + "] ";
+			int spaces = 50 - i.Name.size();
+			result += i.Name + (spaces > 0 ? std::string(spaces, ' ') : "") + " ";
+
+			if (first)
+				result += "[" + (hours == 0 ? "" : std::to_string(hours) + ":") + (minutes == 0 ? "00" : minutes > 10 ? std::to_string(minutes) : "0" + std::to_string(minutes)) + ":" + (seconds == 0 ? "00" : seconds > 10 ? std::to_string(seconds) : "0" + std::to_string(seconds)) + "/" + i.Duration + "]";
+			else
+				result += "[" + i.Duration + "]";
+			result += "\n";
+
+			first = false;
+		}
+		result += "```";
+		//std::string(20 - Stats.size(), ' ');
+		if (result == "``````")
+			return "Queue is empty";
+		std::cout << result.size() << std::endl;
+		return result;
 	}
-	result += "```";
-	 //std::string(20 - Stats.size(), ' ');
-	if (result == "``````")
-		return "Queue is empty";
-
-	return result;
+	catch (std::exception ex)
+	{
+		std::cout << ex.what() << std::endl;
+		return "";
+	}
 }

@@ -197,28 +197,7 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	std::string ar = "cmd.exe /c  youtube-dl \"";
-	ar = ar + args; //-err_detect ignore_err 
-	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
-	ar = ar + "\" --get-title"; //-qscale:a 3 -f ogv output.ogv
-	//-c:a libopus
-
-
-	byte buzzer[100];
-	auto pipe = _popen(ar.c_str(), "rb");
-	if (!pipe) {
-		std::cout << "Failed to open Pipe" << std::endl;
-		return;
-	}
-	bool errored = true;
-	size_t bytes_read;
-	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
-	{
-		std::string Length((char*)buzzer, bytes_read);
-		std::cout << "(" << bytes_read << ") " << Length << std::endl;
-
-	}
-	_pclose(pipe);
+	dpp::message("test");
 
 }
 
@@ -668,7 +647,7 @@ void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string arg
 		auto current_vc = event.from->get_voice(event.msg.guild_id);
 		current_vc->voiceclient->stop_audio();
 		event.from->disconnect_voice(event.msg.guild_id);
-		if (MusicPlayers.count(event.msg.guild_id) == 0)
+		if (MusicPlayers.count(event.msg.guild_id) != 0)
 		{
 			MusicPlayers[event.msg.guild_id]->Stop();
 			delete MusicPlayers[event.msg.guild_id];
@@ -733,11 +712,17 @@ void CommandHandler::Pause(const dpp::message_create_t& event, std::string args)
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
 	MusicPlayers[event.msg.guild_id]->Pause();
 }
-
 void CommandHandler::Queue(const dpp::message_create_t& event, std::string args)
 {
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
-	event.send(MusicPlayers[event.msg.guild_id]->QueueString());
+	try
+	{
+		event.send(MusicPlayers[event.msg.guild_id]->QueueString());
+	}
+	catch (std::exception ex)
+	{
+		std::cout << ex.what() << std::endl;
+	}
 
 }
 
