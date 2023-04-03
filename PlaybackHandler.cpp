@@ -1,10 +1,11 @@
 #include "PlaybackHandler.h"
+#include "Logger.h"
 
 std::string PlaybackHandler::GetLength(std::string url)
 {
-	std::string ar = "cmd.exe /c  youtube-dl \"";
-	ar = ar + url; 
-	ar = ar + "\" --get-duration";
+	std::string ar = "cmd.exe /c  yt-dlp.exe \"";
+	ar = ar + url;
+	ar = ar + "\" --get-duration --skip-download";
 
 
 	byte buzzer[100];
@@ -20,16 +21,13 @@ std::string PlaybackHandler::GetLength(std::string url)
 		Length = std::string((char*)buzzer, bytes_read);
 	}
 	_pclose(pipe);
+	fclose(pipe);
 	return Length;
 }
 
 std::string PlaybackHandler::GetName(std::string url)
 {
-	std::string ar = "cmd.exe /c  youtube-dl \"";
-	ar = ar + url; //-err_detect ignore_err 
-	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
-	ar = ar + "\" --get-title"; //-qscale:a 3 -f ogv output.ogv
-	//-c:a libopus
+	std::string ar = "cmd.exe /c yt-dlp.exe \"" + url + "\" --get-title --skip-download";
 
 
 	byte buzzer[100];
@@ -46,19 +44,14 @@ std::string PlaybackHandler::GetName(std::string url)
 
 	}
 	_pclose(pipe);
+	fclose(pipe);
 	return Length;
 }
 
-void PlaybackHandler::HandlePlaylist(std::string url)
+void PlaybackHandler::GetData(std::string url)
 {
-	std::string ar = "cmd.exe /c  youtube-dl \"";
-	ar = ar + url; //-err_detect ignore_err 
-	//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
-	ar = ar + "\" --get-id"; //-qscale:a 3 -f ogv output.ogv
-	//-c:a libopus
-
-
-	byte buzzer[500];
+	std::string ar = "cmd.exe /c  yt-dlp.exe \"" + url + "\" --get-id --get-title --skip-download --get-duration";
+	byte buzzer[100];
 	auto pipe = _popen(ar.c_str(), "rb");
 	if (!pipe) {
 		std::cout << "Failed to open Pipe" << std::endl;
@@ -72,12 +65,73 @@ void PlaybackHandler::HandlePlaylist(std::string url)
 
 	}
 	_pclose(pipe);
+	fclose(pipe);
 	std::string baseUrl = "https://www.youtube.com/watch?v=";
 	auto result = Helpers::Split(Length, '\n');
-	for (auto& i : result)
+
+	/*std::cout << Length << std::endl;*/
+	//std::cout << result.size() << std::endl;
+
+	for (int i = 0; result.size() > i; i += 3)
 	{
-		std::cout << i << std::endl;
-		Add(baseUrl + i);
+		// Position 0 holds the video name
+		// Position 1 holds the Video ID
+		// Position 2 holds the video's length
+
+
+		Queue.push_back(YoutubeMusicObject(baseUrl + result[i + 1], result[i], result[i + 2]));
+	}
+	std::this_thread::sleep_for(std::chrono::duration<double>(1));
+	TryPlay();
+}
+
+void PlaybackHandler::StartAudio()
+{
+
+	while (EndlessLoop)
+	{
+		if (AudioBuffer.size() == 0 || AudioBuffer.size() < reservedBytes)
+		{
+			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
+			continue;
+		}
+
+		std::shared_lock<std::shared_mutex> lock(myMutex);
+		
+		std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+
+
+		auto end_iter = std::copy(AudioBuffer.begin(), AudioBuffer.begin() + reservedBytes, VoiceBuffer);
+		auto elements_copied = std::distance(VoiceBuffer, end_iter);
+
+		auto v = Client->get_voice(TargetGuild);
+	//	std::cout << elements_copied << std::endl;
+		if (!v) 
+		{
+			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
+			continue;
+		}
+
+		if (v->voiceclient && v->voiceclient->is_ready())
+		{
+			v->voiceclient->send_audio_raw((uint16_t*)VoiceBuffer, elements_copied);
+
+			//if(AudioBuffer.size() > 195840)
+				AudioBuffer.erase(AudioBuffer.begin(), AudioBuffer.begin() + elements_copied);
+			/*else
+			{
+				AudioBuffer.clear();
+			}*/
+
+		}
+		else
+		{
+			std::cout << "Was not ready" << std::endl;
+		}
+		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>((double)46.90)); //46.88)
+		std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+		std::chrono::duration<double> elapsed_seconds = end - start;
+		//std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 	}
 }
 
@@ -87,18 +141,24 @@ PlaybackHandler::PlaybackHandler(dpp::discord_client* client, dpp::snowflake gui
 		throw "Guild cannot be null";
 	if (!client)
 		throw "Client cannot be null";
+	std::thread(&PlaybackHandler::StartAudio, this).detach();
+
+
 }
 
 PlaybackHandler::~PlaybackHandler()
 {
+	EndlessLoop = false;
 	Stop();
+	delete FfmpegBuffer;
+	delete VoiceBuffer;
 }
 
 void PlaybackHandler::Add(std::string url)
 {
 	if (url.find("list=") != std::string::npos)
 	{
-		HandlePlaylist(url);
+		GetData(url);
 		return;
 	}
 
@@ -130,7 +190,7 @@ void PlaybackHandler::TryPlay()
 		return;
 
 	Playing = true;
-	
+
 
 	dpp::voiceconn* v = Client->get_voice(TargetGuild);
 	if (!v)
@@ -140,18 +200,24 @@ void PlaybackHandler::TryPlay()
 	}
 	v->voiceclient->set_send_audio_type(v->voiceclient->satype_live_audio);
 
+	//const int target_rate = 1536;  //target rate in KB/s
+	//const int buffer_size = 11520;  //size of buffer in bytes
+	//std::chrono::milliseconds delay_time;
+	//int test = (buffer_size * 1000) / (target_rate * 1024) * 3.6 * 2;
+	//delay_time = std::chrono::milliseconds(test);
+	//std::cout << delay_time.count() << std::endl;
+
 
 	while (Queue.size() > 0)
 	{
 
-		std::string ar = "cmd.exe /c  youtube-dl -f bestaudio -q --ignore-errors -o - \"";
+		std::string ar = "cmd.exe /c  yt-dlp.exe --verbose -f bestaudio " + std::string(Debugging ? "" : "-q") + std::string(" --ignore-errors -o - \"");
 		ar = ar + Queue[0].Url; //-err_detect ignore_err 
 		//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
-		ar = ar + "\" | ffmpeg -thread_queue_size 11520 -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic"; //-qscale:a 3 -f ogv output.ogv
+		ar = ar + "\" | ffmpeg -thread_queue_size 11520 -i pipe:0 -maxrate 1536K -minrate 1536K -bufsize 3072K -ac 2 -f s16le -ar 48000 pipe:1 " + std::string(Debugging ? "" : ""); //-loglevel panic  //-qscale:a 3 -f ogv output.ogv
 		//-c:a libopus
 
 
-		byte buzzer[11520];
 		auto pipe = _popen(ar.c_str(), "rb");
 		if (!pipe) {
 			std::cout << "Failed to open Pipe" << std::endl;
@@ -159,9 +225,22 @@ void PlaybackHandler::TryPlay()
 		}
 		bool errored = true;
 		Skipping = false;
-		size_t bytes_read;
+		int bytes_read;
 		StartTime = std::chrono::high_resolution_clock::now();
-		while ((bytes_read = fread(buzzer, 1, 11520, pipe)) > 0)
+
+
+
+		//std::chrono::high_resolution_clock::time_point songtime = std::chrono::high_resolution_clock::now();
+
+		//std::this_thread::sleep_for(std::chrono::duration<double>(5));
+
+		//double average = 0;
+		//int bytesperSecond = 192000;
+
+		//double totalbytes = 0;
+
+		//double previousAverage = 0;
+		while ((bytes_read = fread(FfmpegBuffer, 1, reservedBytes, pipe)) > 0)
 		{
 			if (Stopping)
 				break;
@@ -172,40 +251,105 @@ void PlaybackHandler::TryPlay()
 				std::this_thread::sleep_for(std::chrono::duration<double>(1));
 				continue;
 			}
-			v = Client->get_voice(TargetGuild);
+			//v = Client->get_voice(TargetGuild);
 			if (bytes_read < 11520)
 			{
 				std::cout << "11520 was bigger than bytes read: " << bytes_read << std::endl;
 				continue;
 			}
-			if (!v)
-				break;
+			//if (!v)
+			//	break;
+			std::unique_lock<std::shared_mutex> lock(myMutex);
 
-			try
-			{
-				if (v->voiceclient && v->voiceclient->is_ready())
-				{
-					v->voiceclient->send_audio_raw((uint16_t*)buzzer, bytes_read);
-				}
-				else
-				{
-					std::cout << "Was not ready" << std::endl;
-				}
-			}
-			catch (std::exception ex)
-			{
-				std::cout << ex.what() << std::endl;
-			}
+		
+
+			AudioBuffer.insert(AudioBuffer.end(), FfmpegBuffer, FfmpegBuffer + reservedBytes);
+			//if (v->voiceclient && v->voiceclient->is_ready())
+			//{
+			//	v->voiceclient->send_audio_raw(/*(uint16_t*)*/buzzer, bytes_read);
+			//}
+			//else
+			//{
+			//	std::cout << "Was not ready" << std::endl;
+			//}
 
 
-			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(46.0049));
+
+			//auto stop = std::chrono::high_resolution_clock::now();
+			//totalbytes += bytes_read;
+			//double seconds = std::chrono::duration_cast<std::chrono::milliseconds>(stop - songtime).count();
+			//average = (double)(totalbytes / (double)(seconds / 1000));
+			//std::cout << average << std::endl;
+			//int result = 0;
+			//if (bytesperSecond > average && (average > previousAverage || (average - previousAverage) < 100))
+			//{
+			//	if ((PlaybackDelay - 0.1) > 45.8)
+			//	{
+			//	
+
+			//		result = bytesperSecond - average;
+			//		/*if (result > 100000)
+			//		{
+			//			PlaybackDelay -= 0.1;
+			//		}*/
+			//		if (result > 10000)
+			//		{
+			//			PlaybackDelay -= 0.01;
+			//		}
+			//		else if (result < 10000)
+			//		{
+			//			PlaybackDelay -= 0.001;
+			//		}
+			//		else if (result < 1000)
+			//		{
+			//			PlaybackDelay -= 0.0001;
+			//		}
+			//		else
+			//			PlaybackDelay -= 0.00001;
+
+			//	}
+			//}
+			//else if (bytesperSecond < average && (previousAverage > average || previousAverage - average > 100))
+			//{
+			//	if ((PlaybackDelay + 0.1) < 46.1)
+			//	{
+			//		result = average - bytesperSecond;
+			//		/*if (result > 100000)
+			//		{
+			//			PlaybackDelay += 0.1;
+			//		}*/
+			//		if (result > 10000)
+			//		{
+			//			PlaybackDelay += 0.01;
+			//		}
+			//		else if (result < 10000)
+			//		{
+			//			PlaybackDelay += 0.001;
+			//		}
+			//		else if (result < 1000)
+			//		{
+			//			PlaybackDelay += 0.0001;
+			//		}
+			//		else
+			//			PlaybackDelay += 0.00001;
+			//	}
+			//}
+			//if (seconds / 1000 > 30)
+			//{
+			//	songtime = std::chrono::high_resolution_clock::now();
+			//	totalbytes = 0;
+			//}
+			//previousAverage = average;
+			//std::cout << PlaybackDelay << std::endl;
+			//std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(PlaybackDelay));
 		}
 		_pclose(pipe);
+		fclose(pipe);
+		//delete FfmpegBuffer;
 		if (Queue.size() > 0)
 		{
 			Queue.erase(Queue.begin());
-			std::this_thread::sleep_for(std::chrono::duration<double>(0.5));
-
+			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000));
 		}
 	}
 	Playing = false;
@@ -335,11 +479,18 @@ void PlaybackHandler::Skip()
 	Skipping = true;
 }
 
+void PlaybackHandler::Shuffle()
+{
+	std::random_device rd;  // seed for the random number engine
+	std::mt19937 gen(rd());  // Mersenne Twister 19937 generator
+	std::shuffle(Queue.begin() + 1, Queue.end(), gen);
+}
+
 std::string PlaybackHandler::QueueString()
 {
 	try
 	{
-		std::string result = "```";
+		std::string Endresult = "```\n";
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(stop - StartTime).count();
 		int hours = elapsedSeconds / 3600;
@@ -350,10 +501,18 @@ std::string PlaybackHandler::QueueString()
 		int numba = 1;
 		for (auto& i : Queue)
 		{
+			std::string result = "";
 			if (first)
 				result += "Playing =>   ";
-			
-				result += (first ? "" : std::string(13, ' ')) + "[" + (std::string)(Queue.size() > 9 && numba < 10 ? "0" : "") + std::to_string(numba++) + "] ";
+
+			result += (first ? "" : std::string(13, ' ')) + "[" + (std::string)(Queue.size() > 9 && numba < 11 ? "0" : "") + std::to_string(numba++) + "] ";
+			if (i.Name.size() > 50)
+			{
+				i.Name.erase(46);
+				i.Name += "...";
+			}
+
+
 			int spaces = 50 - i.Name.size();
 			result += i.Name + (spaces > 0 ? std::string(spaces, ' ') : "") + " ";
 
@@ -363,14 +522,21 @@ std::string PlaybackHandler::QueueString()
 				result += "[" + i.Duration + "]";
 			result += "\n";
 
+			if (Endresult.size() + result.size() > 1960)
+			{
+				Endresult += "\ntheres more lele\nTotal Queue: " + std::to_string(Queue.size());
+				break;
+			}
+			Endresult += result;
+
 			first = false;
 		}
-		result += "```";
+		Endresult += "```";
 		//std::string(20 - Stats.size(), ' ');
-		if (result == "``````")
+		if (Endresult == "```\n```")
 			return "Queue is empty";
-		std::cout << result.size() << std::endl;
-		return result;
+		std::cout << Endresult.size() << std::endl;
+		return Endresult;
 	}
 	catch (std::exception ex)
 	{

@@ -4,13 +4,14 @@
 #include <iostream>
 
 #include <dpp/dpp.h>
-#include "Logger.cpp"
+#include "Logger.h"
 #include "CommandHandler.h"
 #include <fstream>
 #include <JString.h>
 #include "Command.h"
 #include "Helpers.h"
 #include "DiscordBotStuff.h"
+#include "Logger.h"
 #define _CRT_SECURE_NO_WARNINGS
 
 std::map<std::string, Command> CommandList;
@@ -19,8 +20,9 @@ std::string HelpMsg;
 
 void onMessage_Event(const dpp::message_create_t& event)
 {
+	//std::cout << event.msg.content << std::endl;
 	if (event.msg.author.is_bot()) return;
-	if (!event.msg.content._Starts_with("-"))
+	if (!event.msg.content._Starts_with("+"))
 	{
 		for (int i = 0; CommandHandler::StoreVector.size() > i; i++)
 		{
@@ -67,7 +69,7 @@ void onMessage_Event(const dpp::message_create_t& event)
 
 	//std::cout << "\"" << EventArgs << "\"" << std::endl;
 
-	for (auto i : CommandList)
+	for (auto& i : CommandList)
 	{
 		if (cmd == i.first || cmd == i.second.AlternateName)
 		{
@@ -81,14 +83,32 @@ void onMessage_Event(const dpp::message_create_t& event)
 				event.reply("Command requires Arguments!");
 				break;
 			}
+			
 			Logger::LogDebug("Executed Command " + i.first);
-			std::thread(i.second.Method, event, EventArgs).detach();
-			//i.second.Method(event, EventArgs);
+			std::thread([event, EventArgs, i]()
+				{
+					try
+					{
+						i.second.Method(event, EventArgs);
+					}
+					catch (std::exception ex)
+					{
+						Logger::LogError(ex.what());
+					}
+
+				}).detach();
+
 			break;
 		}
 	}
 	//Command Not Found
 };
+
+void onButtonClick(const dpp::button_click_t& event)
+{
+
+}
+
 void onSlashCommand(const dpp::slashcommand_t& event)
 {
 	if (event.command.get_command_name() == "getusercreationtime")
@@ -150,6 +170,7 @@ void InitCommands()
 	CommandList["pause"] = Command(CommandHandler::Pause, "Pauses the currently playing Music");
 	CommandList["queue"] = Command(CommandHandler::Queue, "Returns the current Music Queue");
 	CommandList["remove"] = Command(CommandHandler::Remove, "Removes one Index given by -queue");
+	CommandList["shuffle"] = Command(CommandHandler::Shuffle, "Randomizes the Playback Queue");
 
 
 
@@ -194,6 +215,7 @@ int main()
 	{
 		SLEEP(1000);
 	}
+	DiscordBotStuff::DiscordBot->on_button_click(onButtonClick);
 	DiscordBotStuff::DiscordBot->on_ready(onDiscordBotReady);
 	DiscordBotStuff::DiscordBot->on_slashcommand(onSlashCommand);
 	DiscordBotStuff::DiscordBot->on_log(dpp::utility::cout_logger());

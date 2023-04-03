@@ -19,6 +19,7 @@ public:
 	uint64_t GuildId;
 	std::string Chat;
 	bool CreatedChannel = false;
+
 private:
 	void Run();
 	// Inherited via Listener

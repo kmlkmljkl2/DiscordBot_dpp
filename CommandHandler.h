@@ -70,4 +70,6 @@ public:
 	static void Pause(const dpp::message_create_t& event, std::string args = "");
 	static void Queue(const dpp::message_create_t& event, std::string args = "");
 	static void Remove(const dpp::message_create_t& event, std::string args = "");
+	static void Shuffle(const dpp::message_create_t& event, std::string args = "");
+
 };

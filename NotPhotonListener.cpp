@@ -3,7 +3,7 @@
 #include <vector>
 #include "Helpers.h"
 #include <dpp/dpp.h>
-#include "Logger.cpp"
+#include "Logger.h"
 #include <regex>
 
 void NotPhotonListener::Run()
@@ -13,23 +13,24 @@ void NotPhotonListener::Run()
 		try
 		{
 			Client.service();
-			SLEEP(10);
+			//SLEEP(10);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		catch (std::exception err)
 		{
 			std::cout << err.what() << std::endl;
-			SLEEP(10);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}
 	delete this;
 }
 
-NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::TCP)
+NotPhotonListener::NotPhotonListener(std::string str) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
 	std::thread(&NotPhotonListener::Run, this).detach();
 }
 
-NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::TCP)
+NotPhotonListener::NotPhotonListener(const NotPhotonListener& old) : Client(*this, "", "01042015_1.28", Photon::ConnectionProtocol::UDP)
 {
 	std::thread(&NotPhotonListener::Run, this).detach();
 }

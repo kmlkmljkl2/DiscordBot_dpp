@@ -1,4 +1,4 @@
-#include "CommandHandler.h"
+﻿#include "CommandHandler.h"
 #include <dpp/dispatcher.h>
 #include "curl.h"
 #include "nlohmann/json.hpp"
@@ -15,6 +15,9 @@
 #include "DiscordBotStuff.h"
 #include <stdio.h>
 #include <iostream>
+#include <random>
+#include "Logger.h"
+#include "Logger.h"
 
 
 size_t CommandHandler::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
@@ -43,7 +46,7 @@ std::string CommandHandler::GetResponse(std::string Url)
 	}
 	else
 	{
-		std::cout << "No curl" << std::endl;
+		Logger::LogError("No curl");
 	}
 	return "";
 }
@@ -91,7 +94,6 @@ void CommandHandler::HandleChat()
 
 			if (Bot->Chat.size() > 2000)
 				Bot->Chat = "Message was over 2k Characters, it got ate";
-			//std::cout << Bot->Chat.size() << std::endl;
 			dpp::message msg(Bot->ChannelId, Bot->Chat);
 			msg.set_guild_id(Bot->GuildId);
 			Bot->Chat = "";
@@ -101,7 +103,7 @@ void CommandHandler::HandleChat()
 			}
 			catch (std::exception ex)
 			{
-				std::cout << "Message error AoTTG -> Discord: " << ex.what() << std::endl;
+				Logger::LogError("Message error AoTTG -> Discord: " + std::string(ex.what()));
 			}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(1500));
@@ -115,9 +117,13 @@ bool CommandHandler::SameVoiceChat(const dpp::message_create_t& event)
 	if (!g) return false;
 	auto current_vc = event.from->get_voice(event.msg.guild_id);
 	if (!current_vc) return false;
-	auto users_vc = g->voice_members.find(event.msg.author.id);
 
-	return current_vc->channel_id == users_vc->second.channel_id;
+	for (auto& i : g->voice_members)
+	{
+		if (event.msg.author.id == i.second.user_id)
+			return current_vc->channel_id == i.second.channel_id;
+	}
+	return false;
 }
 
 void CommandHandler::Init()
@@ -155,7 +161,14 @@ void CommandHandler::Ahegao(const dpp::message_create_t& event, std::string args
 
 void CommandHandler::Meow(const dpp::message_create_t& event, std::string args)
 {
-	std::string Url = "https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(1 + (rand() % 100));
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(1, 100);
+	int random = dis(gen);
+
+	std::cout << random << std::endl;
+
+	std::string Url = "https://g.tenor.com/v1/search?q=meow&media_filter=minimal&key=1D4ZQ37D7W46&limit=1&pos=" + std::to_string(random);
 
 	std::string response_string = GetResponse(Url);
 	json j = json::parse(response_string);
@@ -197,8 +210,41 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
-	dpp::message("test");
+	if (!SameVoiceChat(event)) return;
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	MusicPlayers[event.msg.guild_id]->PlaybackDelay = std::stod(args);
 
+
+
+
+
+
+
+
+
+
+	return;
+	std::vector<std::string> TestPages;
+	TestPages.push_back("Page 1");
+	TestPages.push_back("Page 2");
+
+
+
+	DiscordBotStuff::DiscordBot->message_create(
+		dpp::message(event.msg.channel_id, "this text has buttons").add_component(
+			dpp::component().add_component(
+				dpp::component().set_label("Back").
+				set_type(dpp::cot_button).
+				set_emoji(u8"🤡").
+				set_id("back")
+			).add_component(
+				dpp::component().set_label("Next").
+				set_type(dpp::cot_button).
+				set_emoji(":AlcoholicPepe:", 875055062756515840).
+				set_id("next")
+			)//<:AlcoholicPepe:875055062756515840>
+		)
+	);
 }
 
 void CommandHandler::Debug(const dpp::message_create_t& event, std::string args)
@@ -250,9 +296,7 @@ void CommandHandler::PlayerList(const dpp::message_create_t& event, std::string 
 		}
 		List << " [";
 		auto BiggestId = std::to_string(Bot->Client.getCurrentlyJoinedRoom().getPlayers().getLastElement()->getNumber());
-		//std::cout << BiggestId.size() - std::to_string(player->getNumber()).size() << std::endl;
 		List << std::string(BiggestId.size() - std::to_string(player->getNumber()).size(), '0');
-		//std::cout << List.str() << std::endl;
 		List << std::to_string(player->getNumber()) + "] ";
 
 		std::string Name;
@@ -319,7 +363,6 @@ void CommandHandler::PlayerList(const dpp::message_create_t& event, std::string 
 		List << "\n";
 	}
 	List << "```";
-	//std::cout << List.size() << std::endl;
 
 	event.send(List.str());
 	//Bot->Chat += List.str();
@@ -350,7 +393,6 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 		for (int i = 0; Target->getCustomProperties().getSize() > i; i++)
 		{
 			auto& prop = Target->getCustomProperties().getKeys()[i];
-			//std::cout << prop.toString().UTF8Representation().cstr() << std::endl;
 			if (std::string(prop.toString().UTF8Representation().cstr()) == "\"Private\"")
 			{
 				event.reply("Use the nonexistent join method to join AoTTG2 passworded rooms");
@@ -368,7 +410,6 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 
 
 			if (channel == NULL) continue;
-			//	std::cout << channel->name << std::endl;
 			if ((Helpers::ToLower(channel->name) == "aottg rooms" || Helpers::ToLower(channel->name) == "aottg room") && channel->is_category())
 			{
 				createChannel = true;
@@ -389,10 +430,9 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 			{
 				if (event.is_error())
 				{
-					std::cout << event.get_error().message << std::endl;
+					Logger::LogError(event.get_error().message);
 					return;
 				}
-				//	std::cout << event.get<dpp::channel>().id << std:: endl;
 				Bot->ChannelId = event.get<dpp::channel>().id;
 				Bot->CreatedChannel = true;
 
@@ -474,7 +514,7 @@ void CommandHandler::Disconnect(const dpp::message_create_t& event, std::string 
 		{
 			if (event.is_error())
 			{
-				std::cout << event.get_error().message << std::endl;
+				Logger::LogError(event.get_error().message);
 			}
 		});
 
@@ -503,15 +543,14 @@ Continue:
 
 	Common::JString Ip = "";
 	args = Helpers::ToLower(args);
-	/*if (args == "eu")
+	if (args == "eu")
 		Ip = "135.125.239.180";
 	else if (args == "us")
 		Ip = "142.44.242.29";
 	else if (args == "asia")
 		Ip = "51.79.164.137";
 	else if (args == "sa")
-		Ip = "172.107.193.233";*/
-	Ip = "127.0.0.1";
+		Ip = "172.107.193.233";
 	if (Ip == "")
 	{
 		event.send("Enter a valid Region!");
@@ -533,7 +572,6 @@ Continue:
 	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID(name.c_str()), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 	Bot->Client.connect(options);
 
-	//std::cout << Bot << std::endl;
 
 	std::string InGameName = "NoodleDoodleTesting" + std::to_string(1 + (rand() % 1000));
 	Bot->Client.getLocalPlayer().addCustomProperty("name", InGameName.c_str());
@@ -545,7 +583,7 @@ Continue:
 	Bot->Client.getLocalPlayer().addCustomProperty("NoodleDoodle", "I'm a Discord Bot");
 
 	StoreVector.push_back(Bot);
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
 	{
 		event.reply("Failed to join Server, try again");
@@ -553,7 +591,7 @@ Continue:
 		Disconnect(event);
 		return;
 	}
-	for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
+	/*for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
 	{
 		auto room = Bot->Client.getRoomList()[i];
 		for (int o = 0; room->getCustomProperties().getSize() > o; o++)
@@ -561,7 +599,7 @@ Continue:
 			std::cout << room->getCustomProperties()[o].toString().UTF8Representation().cstr() << std::endl;
 		}
 
-	}
+	}*/
 
 	List(event);
 }
@@ -679,7 +717,7 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 	{
 		MusicPlayers[event.msg.guild_id] = new PlaybackHandler(event.from, event.msg.guild_id);
 	}
-
+	std::cout << args << std::endl;
 	MusicPlayers[event.msg.guild_id]->Add(args);
 }
 
@@ -717,11 +755,17 @@ void CommandHandler::Queue(const dpp::message_create_t& event, std::string args)
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
 	try
 	{
-		event.send(MusicPlayers[event.msg.guild_id]->QueueString());
+		//event.reply(MusicPlayers[event.msg.guild_id]->QueueString().c_str());
+		//DiscordBotStuff::DiscordBot->message_create(dpp::message(event.msg.channel_id, MusicPlayers[event.msg.guild_id]->QueueString().c_str()));
+		std::string queue = MusicPlayers[event.msg.guild_id]->QueueString();
+		
+		//DiscordBotStuff::SendMsg(dpp::message(event.msg.channel_id, "Im a Baka"));
+
+		DiscordBotStuff::SendMsg(dpp::message(event.msg.channel_id, queue.data()));
 	}
 	catch (std::exception ex)
 	{
-		std::cout << ex.what() << std::endl;
+		Logger::LogError(ex.what());
 	}
 
 }
@@ -748,6 +792,13 @@ void CommandHandler::Remove(const dpp::message_create_t& event, std::string args
 		event.reply("Invalid input");
 	}
 
+}
+
+void CommandHandler::Shuffle(const dpp::message_create_t& event, std::string args)
+{
+	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	MusicPlayers[event.msg.guild_id]->Shuffle();
+	event.reply(u8"👌");
 }
 
 
