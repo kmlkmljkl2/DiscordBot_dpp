@@ -52,5 +52,4 @@ public:
 		TrimBeginning(str);
 		return TrimEnd(str);
 	}
-
 };

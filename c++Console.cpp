@@ -44,7 +44,7 @@ void onMessage_Event(const dpp::message_create_t& event)
 				t[1] = Common::Helpers::ValueToObject<Common::Object>::get(name);
 
 				data.put<byte>(4, t, 2);
-				Bot->Client.opRaiseEvent(true, data, 200, ExitGames::LoadBalancing::RaiseEventOptions());
+				Bot->Client.opRaiseEvent(false, data, 200, ExitGames::LoadBalancing::RaiseEventOptions());
 			}
 		}
 
@@ -83,7 +83,7 @@ void onMessage_Event(const dpp::message_create_t& event)
 				event.reply("Command requires Arguments!");
 				break;
 			}
-			
+
 			Logger::LogDebug("Executed Command " + i.first);
 			std::thread([event, EventArgs, i]()
 				{
@@ -95,10 +95,9 @@ void onMessage_Event(const dpp::message_create_t& event)
 					{
 						Logger::LogError(ex.what());
 					}
-
 				}).detach();
 
-			break;
+				break;
 		}
 	}
 	//Command Not Found
@@ -106,7 +105,13 @@ void onMessage_Event(const dpp::message_create_t& event)
 
 void onButtonClick(const dpp::button_click_t& event)
 {
+}
 
+void onVoiceStateUpdate(const dpp::voice_state_update_t& state)
+{
+	Logger::LogDebug(std::string("User ") + dpp::find_user(state.state.user_id)->username + std::string(" changed his state to "));
+
+	//dpp::find_channel(state.from->get_voice()->voiceclient()->channel_id)->get_voice_members().size();
 }
 
 void onSlashCommand(const dpp::slashcommand_t& event)
@@ -122,7 +127,6 @@ void onSlashCommand(const dpp::slashcommand_t& event)
 		char Timeasd[40];
 		ctime_s(Timeasd, 40, &end_time);
 
-
 		event.reply(user.get_user()->username + ": " + std::string(Timeasd));
 	}
 }
@@ -132,17 +136,17 @@ void onDiscordBotReady(const dpp::ready_t& event)
 	if (dpp::run_once<struct register_bot_commands>())
 	{
 		dpp::slashcommand newcommand("Getusercreationtime", "Gets the Creation time of Animals that hide it from their profile", DiscordBotStuff::DiscordBot->me.id);
-			newcommand.add_option(
-				dpp::command_option(dpp::co_user, "user", "The type of animal", true)/*.
-				add_choice(dpp::command_option_choice("Dog", std::string("animal_dog"))).
-				add_choice(dpp::command_option_choice("Cat", std::string("animal_cat"))).
-				add_choice(dpp::command_option_choice("Penguin", std::string("animal_penguin")*/
-				//)
-				//)
-			);
+		newcommand.add_option(
+			dpp::command_option(dpp::co_user, "user", "The type of animal", true)/*.
+			add_choice(dpp::command_option_choice("Dog", std::string("animal_dog"))).
+			add_choice(dpp::command_option_choice("Cat", std::string("animal_cat"))).
+			add_choice(dpp::command_option_choice("Penguin", std::string("animal_penguin")*/
+			//)
+			//)
+		);
 
-			/* Register the command */
-			DiscordBotStuff::DiscordBot->global_command_create(newcommand);
+		/* Register the command */
+		DiscordBotStuff::DiscordBot->global_command_create(newcommand);
 	}
 }
 
@@ -171,10 +175,8 @@ void InitCommands()
 	CommandList["queue"] = Command(CommandHandler::Queue, "Returns the current Music Queue");
 	CommandList["remove"] = Command(CommandHandler::Remove, "Removes one Index given by -queue");
 	CommandList["shuffle"] = Command(CommandHandler::Shuffle, "Randomizes the Playback Queue");
-
-
-
-
+	CommandList["playnow"] = Command(CommandHandler::PlayNow, "Adds the given song as the next in Queue");
+	CommandList["playnow"].RequireArgs = true;
 
 	//CommandList.insert(std::pair<std::string, Command>("", Command()));
 
@@ -206,15 +208,13 @@ int main()
 
 	Logger::LogDebug("Starting");
 
-	
-
-
 	std::this_thread::sleep_for(std::chrono::seconds(1));
-	
+
 	while (DiscordBotStuff::DiscordBot->token == "")
 	{
 		SLEEP(1000);
 	}
+	DiscordBotStuff::DiscordBot->on_voice_state_update(onVoiceStateUpdate);
 	DiscordBotStuff::DiscordBot->on_button_click(onButtonClick);
 	DiscordBotStuff::DiscordBot->on_ready(onDiscordBotReady);
 	DiscordBotStuff::DiscordBot->on_slashcommand(onSlashCommand);
@@ -222,11 +222,6 @@ int main()
 	DiscordBotStuff::DiscordBot->on_message_create.attach(onMessage_Event);
 	DiscordBotStuff::DiscordBot->start(false);
 }
-
-
-
-	
-
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 //Debug program: F5 or Debug > Start Debugging menu

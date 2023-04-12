@@ -19,7 +19,6 @@
 #include "Logger.h"
 #include "Logger.h"
 
-
 size_t CommandHandler::WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -183,13 +182,9 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 	auto Bot = GetBot(event, true);
 	if (Bot == nullptr) return;
 
-
-
-
 	ExitGames::LoadBalancing::RoomOptions roomoptions;
 	roomoptions.setLobbyType(NULL);
 	roomoptions.setMaxPlayers(20);
-
 
 	auto props = Common::Hashtable();
 
@@ -204,7 +199,6 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 	roomoptions.setPropsListedInLobby(ListedProps);
 
-
 	Bot->Client.opCreateRoom("FoodForTesting`The Forest III`normal`999999`day``205349876", roomoptions);
 }
 
@@ -214,21 +208,10 @@ void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
 	MusicPlayers[event.msg.guild_id]->PlaybackDelay = std::stod(args);
 
-
-
-
-
-
-
-
-
-
 	return;
 	std::vector<std::string> TestPages;
 	TestPages.push_back("Page 1");
 	TestPages.push_back("Page 2");
-
-
 
 	DiscordBotStuff::DiscordBot->message_create(
 		dpp::message(event.msg.channel_id, "this text has buttons").add_component(
@@ -390,6 +373,11 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 
 	if (Target != NULL)
 	{
+		if (Target->getMaxPlayers() != 0 && Target->getMaxPlayers() == Target->getPlayerCount())
+		{
+			event.reply("Room is full");
+			return;
+		}
 		for (int i = 0; Target->getCustomProperties().getSize() > i; i++)
 		{
 			auto& prop = Target->getCustomProperties().getKeys()[i];
@@ -398,7 +386,6 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 				event.reply("Use the nonexistent join method to join AoTTG2 passworded rooms");
 				return;
 			}
-
 		}
 		Bot->Client.opJoinRoom(Target->getName(), false, 0, Common::JVector<Common::JString>());
 		bool createChannel = false;
@@ -408,7 +395,6 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 		{
 			auto channel = dpp::find_channel(guild->channels[i]);
 
-
 			if (channel == NULL) continue;
 			if ((Helpers::ToLower(channel->name) == "aottg rooms" || Helpers::ToLower(channel->name) == "aottg room") && channel->is_category())
 			{
@@ -417,7 +403,6 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 				break;
 			}
 		}
-
 
 		if (!createChannel) return;
 
@@ -435,15 +420,9 @@ void CommandHandler::Join(const dpp::message_create_t& event, std::string args)
 				}
 				Bot->ChannelId = event.get<dpp::channel>().id;
 				Bot->CreatedChannel = true;
-
 			});
-
-
-
-
 	}
 }
-
 
 void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 {
@@ -487,7 +466,6 @@ void CommandHandler::List(const dpp::message_create_t& event, std::string args)
 			RoomInfo += "} ";
 		}
 
-
 		List << RoomInfo << "\n";
 	}
 
@@ -517,8 +495,6 @@ void CommandHandler::Disconnect(const dpp::message_create_t& event, std::string 
 				Logger::LogError(event.get_error().message);
 			}
 		});
-
-
 }
 
 void CommandHandler::Start(const dpp::message_create_t& event, std::string args)
@@ -562,16 +538,13 @@ Continue:
 	Bot->GuildId = event.msg.guild_id;
 	Bot->ChannelId = event.msg.channel_id;
 
-
 	/*ExitGames::LoadBalancing::ConnectOptions options2(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "crustycunt");
 
 	Bot->Client.connect(options2);*/
 
-
 	std::string name = std::string("notsocrusty") + std::to_string(1 + (rand() % 1000));
 	ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID(name.c_str()), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
 	Bot->Client.connect(options);
-
 
 	std::string InGameName = "NoodleDoodleTesting" + std::to_string(1 + (rand() % 1000));
 	Bot->Client.getLocalPlayer().addCustomProperty("name", InGameName.c_str());
@@ -580,6 +553,7 @@ Continue:
 	Bot->Client.getLocalPlayer().addCustomProperty("deaths", -1);
 	Bot->Client.getLocalPlayer().addCustomProperty("max_dmg", 0);
 	Bot->Client.getLocalPlayer().addCustomProperty("total_dmg", 0);
+	Bot->Client.getLocalPlayer().addCustomProperty("RCteam", 1);
 	Bot->Client.getLocalPlayer().addCustomProperty("NoodleDoodle", "I'm a Discord Bot");
 
 	StoreVector.push_back(Bot);
@@ -598,7 +572,6 @@ Continue:
 		{
 			std::cout << room->getCustomProperties()[o].toString().UTF8Representation().cstr() << std::endl;
 		}
-
 	}*/
 
 	List(event);
@@ -692,10 +665,7 @@ void CommandHandler::LeaveVC(const dpp::message_create_t& event, std::string arg
 			MusicPlayers.erase(event.msg.guild_id);
 		}
 	}
-
 }
-
-
 
 #include <Windows.h>
 void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
@@ -717,7 +687,7 @@ void CommandHandler::Play(const dpp::message_create_t& event, std::string args)
 	{
 		MusicPlayers[event.msg.guild_id] = new PlaybackHandler(event.from, event.msg.guild_id);
 	}
-	std::cout << args << std::endl;
+
 	MusicPlayers[event.msg.guild_id]->Add(args);
 }
 
@@ -740,7 +710,6 @@ void CommandHandler::Resume(const dpp::message_create_t& event, std::string args
 
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
 	MusicPlayers[event.msg.guild_id]->Resume();
-
 }
 
 void CommandHandler::Pause(const dpp::message_create_t& event, std::string args)
@@ -753,21 +722,23 @@ void CommandHandler::Pause(const dpp::message_create_t& event, std::string args)
 void CommandHandler::Queue(const dpp::message_create_t& event, std::string args)
 {
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
+	std::string queue = MusicPlayers[event.msg.guild_id]->QueueString();
+
 	try
 	{
 		//event.reply(MusicPlayers[event.msg.guild_id]->QueueString().c_str());
 		//DiscordBotStuff::DiscordBot->message_create(dpp::message(event.msg.channel_id, MusicPlayers[event.msg.guild_id]->QueueString().c_str()));
-		std::string queue = MusicPlayers[event.msg.guild_id]->QueueString();
-		
+
 		//DiscordBotStuff::SendMsg(dpp::message(event.msg.channel_id, "Im a Baka"));
 
 		DiscordBotStuff::SendMsg(dpp::message(event.msg.channel_id, queue.data()));
 	}
 	catch (std::exception ex)
 	{
+		Logger::LogError("String was " + std::to_string(queue.size()) + " long");
+		Logger::LogError(queue);
 		Logger::LogError(ex.what());
 	}
-
 }
 
 void CommandHandler::Remove(const dpp::message_create_t& event, std::string args)
@@ -775,7 +746,8 @@ void CommandHandler::Remove(const dpp::message_create_t& event, std::string args
 	if (!SameVoiceChat(event)) return;
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
 
-	try {
+	try
+	{
 		int num = std::stoi(args);
 		if (1 > num)
 			return;
@@ -784,14 +756,35 @@ void CommandHandler::Remove(const dpp::message_create_t& event, std::string args
 			event.reply("Cannot remove currently playing song");
 			return;
 		}
-		MusicPlayers[event.msg.guild_id]->Remove(num);
+		if (args.find('-') == std::string::npos)
+		{
+			MusicPlayers[event.msg.guild_id]->Remove(num);
+		}
+		else
+		{
+			auto arg = Helpers::Split(args, '-');
+			if (args.length() < 0)
+			{
+				event.reply("Specify start and end");
+				return;
+			}
+			try
+			{
+				int start = std::stoi(arg[0]);
+				int end = std::stoi(arg[1]);
 
+				MusicPlayers[event.msg.guild_id]->Remove(start, end);
+			}
+			catch (std::exception ex)
+			{
+				Logger::LogError(ex.what());
+			}
+		}
 	}
 	catch (const std::invalid_argument& e) {
 		// Conversion failed
 		event.reply("Invalid input");
 	}
-
 }
 
 void CommandHandler::Shuffle(const dpp::message_create_t& event, std::string args)
@@ -801,7 +794,25 @@ void CommandHandler::Shuffle(const dpp::message_create_t& event, std::string arg
 	event.reply(u8"👌");
 }
 
+void CommandHandler::PlayNow(const dpp::message_create_t& event, std::string args)
+{
+	if (!SameVoiceChat(event)) return;
 
-
-
-
+	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
+	if (!v)
+	{
+		event.reply("I'm not inside a VoiceChat yet");
+		return;
+	}
+	if (args.find("youtu") == std::string::npos || args.find(" ") != std::string::npos)
+	{
+		event.reply("Invalid URL ||whitespaces are not allowed||");
+		return;
+	}
+	else if (args.find("list=") != std::string::npos)
+	{
+		event.reply("Don't use PlayNow to queue Playlists");
+		return;
+	}
+	MusicPlayers[event.msg.guild_id]->PlayNow(args);
+}

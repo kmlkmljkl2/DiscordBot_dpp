@@ -61,7 +61,6 @@ public:
 	static void Next(const dpp::message_create_t& event, std::string args = "");
 	static void Back(const dpp::message_create_t& event, std::string args = "");
 
-
 	static void JoinVC(const dpp::message_create_t& event, std::string args = "");
 	static void LeaveVC(const dpp::message_create_t& event, std::string args = "");
 	static void Play(const dpp::message_create_t& event, std::string args = "");
@@ -71,5 +70,5 @@ public:
 	static void Queue(const dpp::message_create_t& event, std::string args = "");
 	static void Remove(const dpp::message_create_t& event, std::string args = "");
 	static void Shuffle(const dpp::message_create_t& event, std::string args = "");
-
+	static void PlayNow(const dpp::message_create_t& event, std::string args = "");
 };

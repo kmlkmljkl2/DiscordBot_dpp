@@ -39,8 +39,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="youtube-dl.exe" />
     <None Include="ffmpeg.exe" />
+    <None Include="yt-dlp.exe" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotPhotonListener.h">

@@ -7,7 +7,6 @@ std::string PlaybackHandler::GetLength(std::string url)
 	ar = ar + url;
 	ar = ar + "\" --get-duration --skip-download";
 
-
 	byte buzzer[100];
 	auto pipe = _popen(ar.c_str(), "rb");
 	if (!pipe) {
@@ -29,7 +28,6 @@ std::string PlaybackHandler::GetName(std::string url)
 {
 	std::string ar = "cmd.exe /c yt-dlp.exe \"" + url + "\" --get-title --skip-download";
 
-
 	byte buzzer[100];
 	auto pipe = _popen(ar.c_str(), "rb");
 	if (!pipe) {
@@ -41,7 +39,6 @@ std::string PlaybackHandler::GetName(std::string url)
 	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
 	{
 		Length = std::string((char*)buzzer, bytes_read);
-
 	}
 	_pclose(pipe);
 	fclose(pipe);
@@ -59,14 +56,37 @@ void PlaybackHandler::GetData(std::string url)
 	}
 	size_t bytes_read;
 	std::string Length;
+	std::string baseUrl = "https://www.youtube.com/watch?v=";
+
 	while ((bytes_read = fread(buzzer, 1, 100, pipe)) > 0)
 	{
 		Length += std::string((char*)buzzer, bytes_read);
+		/*	if (Queue.size() == 0)
+			{
+				auto result = Helpers::Split(Length, '\n');
+				if (result.size() < 4)
+					continue;
 
+				Queue.push_back(YoutubeMusicObject(baseUrl + result[1], result[0], result[2]));
+				int i = 0;
+				for (char c : Length)
+				{
+					if (c == '\n')
+					{
+						i++;
+					}
+					Length.erase(0);
+					if (i == 3)
+						break;
+				}
+
+				TryPlay();
+			}*/
+			//Logger::LogDebug(Length);
 	}
 	_pclose(pipe);
 	fclose(pipe);
-	std::string baseUrl = "https://www.youtube.com/watch?v=";
+	//return;
 	auto result = Helpers::Split(Length, '\n');
 
 	/*std::cout << Length << std::endl;*/
@@ -78,62 +98,107 @@ void PlaybackHandler::GetData(std::string url)
 		// Position 1 holds the Video ID
 		// Position 2 holds the video's length
 
-
 		Queue.push_back(YoutubeMusicObject(baseUrl + result[i + 1], result[i], result[i + 2]));
 	}
 	std::this_thread::sleep_for(std::chrono::duration<double>(1));
 	TryPlay();
 }
 
-void PlaybackHandler::StartAudio()
-{
-
-	while (EndlessLoop)
-	{
-		if (AudioBuffer.size() == 0 || AudioBuffer.size() < reservedBytes)
-		{
-			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
-			continue;
-		}
-
-		std::shared_lock<std::shared_mutex> lock(myMutex);
-		
-		std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
-
-
-		auto end_iter = std::copy(AudioBuffer.begin(), AudioBuffer.begin() + reservedBytes, VoiceBuffer);
-		auto elements_copied = std::distance(VoiceBuffer, end_iter);
-
-		auto v = Client->get_voice(TargetGuild);
-	//	std::cout << elements_copied << std::endl;
-		if (!v) 
-		{
-			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
-			continue;
-		}
-
-		if (v->voiceclient && v->voiceclient->is_ready())
-		{
-			v->voiceclient->send_audio_raw((uint16_t*)VoiceBuffer, elements_copied);
-
-			//if(AudioBuffer.size() > 195840)
-				AudioBuffer.erase(AudioBuffer.begin(), AudioBuffer.begin() + elements_copied);
-			/*else
-			{
-				AudioBuffer.clear();
-			}*/
-
-		}
-		else
-		{
-			std::cout << "Was not ready" << std::endl;
-		}
-		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>((double)46.90)); //46.88)
-		std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
-		std::chrono::duration<double> elapsed_seconds = end - start;
-		//std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
-	}
-}
+//void PlaybackHandler::StartAudio()
+//{
+//	return;
+//	double delay = static_cast<double>(1000) / static_cast<double>(1 / 0.06) - 3;
+//	while (EndlessLoop)
+//	{
+//		if (AudioBuffer.size() == 0 || AudioBuffer.size() < 11520)
+//		{
+//			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(1000));
+//			continue;
+//		}
+//		if (Pausing)
+//		{
+//			std::this_thread::sleep_for(std::chrono::duration<double>(1));
+//			continue;
+//		}
+//
+//		std::shared_lock<std::shared_mutex> lock(myMutex);
+//
+//		//std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+//
+//
+//		std::copy(AudioBuffer.begin(), AudioBuffer.begin() + 11520, VoiceBuffer);
+//
+//		auto v = Client->get_voice(TargetGuild);
+//		//	std::cout << elements_copied << std::endl;
+//		if (!v)
+//		{
+//			std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
+//			continue;
+//		}
+//
+//		if (v->voiceclient && v->voiceclient->is_ready())
+//		{
+//			v->voiceclient->send_audio_raw((uint16_t*)VoiceBuffer, 11520);
+//			Logger::LogInfo(std::to_string(v->voiceclient->get_secs_remaining()));
+//			AudioBuffer.erase(AudioBuffer.begin(), AudioBuffer.begin() + 11520);
+//
+//		}
+//		else
+//		{
+//			std::cout << "Was not ready" << std::endl;
+//		}
+//		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(delay)); //46.88)
+//
+//
+//
+//		//std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+//		//std::chrono::duration<double> elapsed_seconds = end - start;
+//
+//
+//	//	if (AudioBuffer.size() == 0 || AudioBuffer.size() < reservedBytes)
+//	//	{
+//	//		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
+//	//		continue;
+//	//	}
+//
+//	//	std::shared_lock<std::shared_mutex> lock(myMutex);
+//	//
+//	//	std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+//
+//
+//	//	auto end_iter = std::copy(AudioBuffer.begin(), AudioBuffer.begin() + reservedBytes, VoiceBuffer);
+//	//	auto elements_copied = std::distance(VoiceBuffer, end_iter);
+//
+//	//	auto v = Client->get_voice(TargetGuild);
+//	////	std::cout << elements_copied << std::endl;
+//	//	if (!v)
+//	//	{
+//	//		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(59));
+//	//		continue;
+//	//	}
+//
+//	//	if (v->voiceclient && v->voiceclient->is_ready())
+//	//	{
+//	//		v->voiceclient->send_audio_raw((uint16_t*)VoiceBuffer, elements_copied);
+//
+//	//		//if(AudioBuffer.size() > 195840)
+//	//			AudioBuffer.erase(AudioBuffer.begin(), AudioBuffer.begin() + elements_copied);
+//	//		/*else
+//	//		{
+//	//			AudioBuffer.clear();
+//	//		}*/
+//
+//	//	}
+//	//	else
+//	//	{
+//	//		std::cout << "Was not ready" << std::endl;
+//	//	}
+//	//	std::this_thread::sleep_for(std::chrono::duration<double, std::milli>((double)46.935)); //46.88)
+//	//	std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+//	//	std::chrono::duration<double> elapsed_seconds = end - start;
+//	//	//std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
+//	}
+//}
 
 PlaybackHandler::PlaybackHandler(dpp::discord_client* client, dpp::snowflake guild) : Client(client), TargetGuild(guild)
 {
@@ -141,20 +206,18 @@ PlaybackHandler::PlaybackHandler(dpp::discord_client* client, dpp::snowflake gui
 		throw "Guild cannot be null";
 	if (!client)
 		throw "Client cannot be null";
-	std::thread(&PlaybackHandler::StartAudio, this).detach();
-
-
+	//std::thread(&PlaybackHandler::StartAudio, this).detach();
 }
 
 PlaybackHandler::~PlaybackHandler()
 {
-	EndlessLoop = false;
+	//EndlessLoop = false;
 	Stop();
-	delete FfmpegBuffer;
-	delete VoiceBuffer;
+	//delete FfmpegBuffer;
+	//delete VoiceBuffer;
 }
 
-void PlaybackHandler::Add(std::string url)
+void PlaybackHandler::Add(std::string url, bool playnow)
 {
 	if (url.find("list=") != std::string::npos)
 	{
@@ -164,12 +227,20 @@ void PlaybackHandler::Add(std::string url)
 
 	auto length = GetLength(url);
 	auto name = GetName(url);
-	Queue.push_back(YoutubeMusicObject(url, name.erase(name.length() - 1), length.erase(length.length() - 1)));
-	TryPlay();
-	/*for (auto i : Queue)
+	if (playnow)
 	{
-		std::cout << i << std::endl;
-	}*/
+		Queue.insert(Queue.begin() + 1, YoutubeMusicObject(url, name.erase(name.length() - 1), length.erase(length.length() - 1)));
+	}
+	else
+	{
+		Queue.push_back(YoutubeMusicObject(url, name.erase(name.length() - 1), length.erase(length.length() - 1)));
+	}
+	TryPlay();
+}
+
+void PlaybackHandler::PlayNow(std::string url)
+{
+	Add(url, true);
 }
 
 void PlaybackHandler::Remove(int index)
@@ -181,6 +252,18 @@ void PlaybackHandler::Remove(int index)
 	Queue.erase(Queue.begin() + index);
 }
 
+void PlaybackHandler::Remove(int startIndex, int end)
+{
+	startIndex = startIndex - 1;
+	end = end - 1;
+	if (startIndex < 0 || end < 0)
+		return;
+
+	if (startIndex > Queue.size() || end > Queue.size() || end < startIndex)
+		return;
+	Queue.erase(Queue.begin() + startIndex, Queue.begin() + end);
+}
+
 void PlaybackHandler::TryPlay()
 {
 	if (Stopping || Playing)
@@ -190,7 +273,6 @@ void PlaybackHandler::TryPlay()
 		return;
 
 	Playing = true;
-
 
 	dpp::voiceconn* v = Client->get_voice(TargetGuild);
 	if (!v)
@@ -207,145 +289,146 @@ void PlaybackHandler::TryPlay()
 	//delay_time = std::chrono::milliseconds(test);
 	//std::cout << delay_time.count() << std::endl;
 
+	//60 - 3
+	//double delay = static_cast<double>(1000) / static_cast<double>(1 / 0.06) - 13.55;
 
 	while (Queue.size() > 0)
 	{
-
-		std::string ar = "cmd.exe /c  yt-dlp.exe --verbose -f bestaudio " + std::string(Debugging ? "" : "-q") + std::string(" --ignore-errors -o - \"");
-		ar = ar + Queue[0].Url; //-err_detect ignore_err 
+		std::string ar = "cmd.exe /c  yt-dlp.exe -f bestaudio " + std::string(Debugging ? "" : "-q") + std::string(" --ignore-errors -o - \"");
+		ar = ar + Queue[0].Url; //-err_detect ignore_err
 		//ar = ar + "\" | ffmpeg -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 -loglevel panic -sample_fmt s16"; //-qscale:a 3 -f ogv output.ogv
-		ar = ar + "\" | ffmpeg -thread_queue_size 11520 -i pipe:0 -maxrate 1536K -minrate 1536K -bufsize 3072K -ac 2 -f s16le -ar 48000 pipe:1 " + std::string(Debugging ? "" : ""); //-loglevel panic  //-qscale:a 3 -f ogv output.ogv
+		ar = ar + "\" | ffmpeg -re -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1 " + std::string(Debugging ? "-loglevel panic" : "-loglevel quiet"); //-loglevel panic  //-qscale:a 3 -f ogv output.ogv
 		//-c:a libopus
-
 
 		auto pipe = _popen(ar.c_str(), "rb");
 		if (!pipe) {
 			std::cout << "Failed to open Pipe" << std::endl;
 			return;
 		}
-		bool errored = true;
+		//bool errored = true;
 		Skipping = false;
 		int bytes_read;
 		StartTime = std::chrono::high_resolution_clock::now();
 
-
-
-		//std::chrono::high_resolution_clock::time_point songtime = std::chrono::high_resolution_clock::now();
-
-		//std::this_thread::sleep_for(std::chrono::duration<double>(5));
-
-		//double average = 0;
-		//int bytesperSecond = 192000;
-
-		//double totalbytes = 0;
-
-		//double previousAverage = 0;
-		while ((bytes_read = fread(FfmpegBuffer, 1, reservedBytes, pipe)) > 0)
+		byte test[11520];
+		std::cout << "Sizeof unit16_t " << sizeof(uint16_t) << " and sizeof the array " << sizeof(test) << std::endl;
+		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(2000));
+		while ((bytes_read = fread(test, 1, 11520, pipe)) > 0)
 		{
 			if (Stopping)
 				break;
 			if (Skipping)
 				break;
-			if (Pausing)
+			while (Pausing)
 			{
 				std::this_thread::sleep_for(std::chrono::duration<double>(1));
-				continue;
 			}
-			//v = Client->get_voice(TargetGuild);
 			if (bytes_read < 11520)
-			{
-				std::cout << "11520 was bigger than bytes read: " << bytes_read << std::endl;
 				continue;
+
+			{
+				//v = Client->get_voice(TargetGuild);
+				/*if (bytes_read < 11520)
+				{
+					std::cout << "11520 was bigger than bytes read: " << bytes_read << std::endl;
+					continue;
+				}*/
+				//if (!v)
+				//	break;
+				//std::unique_lock<std::shared_mutex> lock(myMutex);
 			}
-			//if (!v)
-			//	break;
-			std::unique_lock<std::shared_mutex> lock(myMutex);
 
-		
+			v->voiceclient->send_audio_raw((uint16_t*)test, bytes_read);
 
-			AudioBuffer.insert(AudioBuffer.end(), FfmpegBuffer, FfmpegBuffer + reservedBytes);
-			//if (v->voiceclient && v->voiceclient->is_ready())
-			//{
-			//	v->voiceclient->send_audio_raw(/*(uint16_t*)*/buzzer, bytes_read);
-			//}
-			//else
-			//{
-			//	std::cout << "Was not ready" << std::endl;
-			//}
+			{
+				//std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(delay));
 
+				//currentsong.insert(currentsong.end(), FfmpegBuffer, FfmpegBuffer + bytes_read);
 
+				//Logger::LogInfo(std::to_string(AudioBuffer.size()));
 
-			//auto stop = std::chrono::high_resolution_clock::now();
-			//totalbytes += bytes_read;
-			//double seconds = std::chrono::duration_cast<std::chrono::milliseconds>(stop - songtime).count();
-			//average = (double)(totalbytes / (double)(seconds / 1000));
-			//std::cout << average << std::endl;
-			//int result = 0;
-			//if (bytesperSecond > average && (average > previousAverage || (average - previousAverage) < 100))
-			//{
-			//	if ((PlaybackDelay - 0.1) > 45.8)
-			//	{
-			//	
+				//if (AudioBuffer.size() > 11520)
 
-			//		result = bytesperSecond - average;
-			//		/*if (result > 100000)
-			//		{
-			//			PlaybackDelay -= 0.1;
-			//		}*/
-			//		if (result > 10000)
-			//		{
-			//			PlaybackDelay -= 0.01;
-			//		}
-			//		else if (result < 10000)
-			//		{
-			//			PlaybackDelay -= 0.001;
-			//		}
-			//		else if (result < 1000)
-			//		{
-			//			PlaybackDelay -= 0.0001;
-			//		}
-			//		else
-			//			PlaybackDelay -= 0.00001;
+				//if (v->voiceclient && v->voiceclient->is_ready())
+				//{
+				//	v->voiceclient->send_audio_raw(/*(uint16_t*)*/buzzer, bytes_read);
+				//}
+				//else
+				//{
+				//	std::cout << "Was not ready" << std::endl;
+				//}
 
-			//	}
-			//}
-			//else if (bytesperSecond < average && (previousAverage > average || previousAverage - average > 100))
-			//{
-			//	if ((PlaybackDelay + 0.1) < 46.1)
-			//	{
-			//		result = average - bytesperSecond;
-			//		/*if (result > 100000)
-			//		{
-			//			PlaybackDelay += 0.1;
-			//		}*/
-			//		if (result > 10000)
-			//		{
-			//			PlaybackDelay += 0.01;
-			//		}
-			//		else if (result < 10000)
-			//		{
-			//			PlaybackDelay += 0.001;
-			//		}
-			//		else if (result < 1000)
-			//		{
-			//			PlaybackDelay += 0.0001;
-			//		}
-			//		else
-			//			PlaybackDelay += 0.00001;
-			//	}
-			//}
-			//if (seconds / 1000 > 30)
-			//{
-			//	songtime = std::chrono::high_resolution_clock::now();
-			//	totalbytes = 0;
-			//}
-			//previousAverage = average;
-			//std::cout << PlaybackDelay << std::endl;
-			//std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(PlaybackDelay));
+				//auto stop = std::chrono::high_resolution_clock::now();
+				//totalbytes += bytes_read;
+				//double seconds = std::chrono::duration_cast<std::chrono::milliseconds>(stop - songtime).count();
+				//average = (double)(totalbytes / (double)(seconds / 1000));
+				//std::cout << average << std::endl;
+				//int result = 0;
+				//if (bytesperSecond > average && (average > previousAverage || (average - previousAverage) < 100))
+				//{
+				//	if ((PlaybackDelay - 0.1) > 45.8)
+				//	{
+				//
+
+				//		result = bytesperSecond - average;
+				//		/*if (result > 100000)
+				//		{
+				//			PlaybackDelay -= 0.1;
+				//		}*/
+				//		if (result > 10000)
+				//		{
+				//			PlaybackDelay -= 0.01;
+				//		}
+				//		else if (result < 10000)
+				//		{
+				//			PlaybackDelay -= 0.001;
+				//		}
+				//		else if (result < 1000)
+				//		{
+				//			PlaybackDelay -= 0.0001;
+				//		}
+				//		else
+				//			PlaybackDelay -= 0.00001;
+
+				//	}
+				//}
+				//else if (bytesperSecond < average && (previousAverage > average || previousAverage - average > 100))
+				//{
+				//	if ((PlaybackDelay + 0.1) < 46.1)
+				//	{
+				//		result = average - bytesperSecond;
+				//		/*if (result > 100000)
+				//		{
+				//			PlaybackDelay += 0.1;
+				//		}*/
+				//		if (result > 10000)
+				//		{
+				//			PlaybackDelay += 0.01;
+				//		}
+				//		else if (result < 10000)
+				//		{
+				//			PlaybackDelay += 0.001;
+				//		}
+				//		else if (result < 1000)
+				//		{
+				//			PlaybackDelay += 0.0001;
+				//		}
+				//		else
+				//			PlaybackDelay += 0.00001;
+				//	}
+				//}
+				//if (seconds / 1000 > 30)
+				//{
+				//	songtime = std::chrono::high_resolution_clock::now();
+				//	totalbytes = 0;
+				//}
+				//previousAverage = average;
+				//std::cout << PlaybackDelay << std::endl;
+				//std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(PlaybackDelay));
+			}
 		}
 		_pclose(pipe);
 		fclose(pipe);
-		//delete FfmpegBuffer;
 		if (Queue.size() > 0)
 		{
 			Queue.erase(Queue.begin());
@@ -354,108 +437,106 @@ void PlaybackHandler::TryPlay()
 	}
 	Playing = false;
 	return;
-	//SECURITY_ATTRIBUTES sa;
-	//sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	//sa.bInheritHandle = TRUE;
-	//sa.lpSecurityDescriptor = NULL;
+	{
+		//SECURITY_ATTRIBUTES sa;
+		//sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+		//sa.bInheritHandle = TRUE;
+		//sa.lpSecurityDescriptor = NULL;
 
-	//// Create the child output pipe.
-	//HANDLE hChildStdoutRd, hChildStdoutWr;
-	//CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &sa, 0);
+		//// Create the child output pipe.
+		//HANDLE hChildStdoutRd, hChildStdoutWr;
+		//CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &sa, 0);
 
-	//// Set the handle as inheritable.
-	//SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0);
+		//// Set the handle as inheritable.
+		//SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0);
 
-	//// Create the child input pipe.
-	//HANDLE hChildStdinRd, hChildStdinWr;
-	//CreatePipe(&hChildStdinRd, &hChildStdinWr, &sa, 0);
+		//// Create the child input pipe.
+		//HANDLE hChildStdinRd, hChildStdinWr;
+		//CreatePipe(&hChildStdinRd, &hChildStdinWr, &sa, 0);
 
-	//// Set the handle as inheritable.
-	//SetHandleInformation(hChildStdinWr, HANDLE_FLAG_INHERIT, 0);
+		//// Set the handle as inheritable.
+		//SetHandleInformation(hChildStdinWr, HANDLE_FLAG_INHERIT, 0);
 
-	//// Set up the start up info struct.
-	//STARTUPINFO si;
-	//ZeroMemory(&si, sizeof(STARTUPINFO));
-	//si.cb = sizeof(STARTUPINFO);
-	//si.hStdError = hChildStdoutWr;
-	//si.hStdOutput = hChildStdoutWr;
-	//si.hStdInput = hChildStdinRd;
-	//si.dwFlags |= STARTF_USESTDHANDLES;
+		//// Set up the start up info struct.
+		//STARTUPINFO si;
+		//ZeroMemory(&si, sizeof(STARTUPINFO));
+		//si.cb = sizeof(STARTUPINFO);
+		//si.hStdError = hChildStdoutWr;
+		//si.hStdOutput = hChildStdoutWr;
+		//si.hStdInput = hChildStdinRd;
+		//si.dwFlags |= STARTF_USESTDHANDLES;
 
-	//// Create the child process.
-	//PROCESS_INFORMATION pi;
-	//CreateProcess(NULL, const_cast<LPSTR>(ar.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+		//// Create the child process.
+		//PROCESS_INFORMATION pi;
+		//CreateProcess(NULL, const_cast<LPSTR>(ar.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
 
-	//// Close the write end of the pipes.
-	//CloseHandle(hChildStdoutWr);
-	//CloseHandle(hChildStdinRd);
-	//SLEEP(2000);
-	//// Read the output from the child process.
-	//char buffer[8192];
-	//DWORD bytesRead;
+		//// Close the write end of the pipes.
+		//CloseHandle(hChildStdoutWr);
+		//CloseHandle(hChildStdinRd);
+		//SLEEP(2000);
+		//// Read the output from the child process.
+		//char buffer[8192];
+		//DWORD bytesRead;
 
-	//std::string out;
+		//std::string out;
 
-	//while (ReadFile(hChildStdoutRd, buffer, 8192, &bytesRead, NULL))
-	//{
-	//	out.reserve(out.size() + bytesRead);
-	//	out.append(buffer, bytesRead);
+		//while (ReadFile(hChildStdoutRd, buffer, 8192, &bytesRead, NULL))
+		//{
+		//	out.reserve(out.size() + bytesRead);
+		//	out.append(buffer, bytesRead);
 
-	//	if (out.size() < 11520)
-	//		continue;
+		//	if (out.size() < 11520)
+		//		continue;
 
-	//	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
-	//	if (v && v->voiceclient && v->voiceclient->is_ready())
-	//	{
-	//		std::string packet(out.substr(0, 11520));
-	//		out.erase(out.begin(), out.begin() + 11520);
+		//	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
+		//	if (v && v->voiceclient && v->voiceclient->is_ready())
+		//	{
+		//		std::string packet(out.substr(0, 11520));
+		//		out.erase(out.begin(), out.begin() + 11520);
 
+		//		v->voiceclient->send_audio_raw((uint16_t*)packet.data(), packet.size());
 
-	//		v->voiceclient->send_audio_raw((uint16_t*)packet.data(), packet.size());
+		//	}
+		//}
+		//while (out.size() > 200)
+		//{
+		//	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
+		//	if (v && v->voiceclient && v->voiceclient->is_ready())
+		//	{
+		//		if (out.size() > 11520)
+		//		{
+		//			std::string packet(out.substr(0, 11520));
+		//			out.erase(out.begin(), out.begin() + 11520);
 
+		//			v->voiceclient->send_audio_raw((uint16_t*)packet.data(), packet.size());
 
+		//		}
+		//		else
+		//		{
+		//			try
+		//			{
+		//				v->voiceclient->send_audio_raw((uint16_t*)out.data(), out.size());
+		//			}
+		//			catch (std::exception& e)
+		//			{
+		//				std::cout << e.what() << std::endl;
+		//				out.clear();
+		//			}
+		//		}
 
-	//	}
-	//}
-	//while (out.size() > 200)
-	//{
-	//	dpp::voiceconn* v = event.from->get_voice(event.msg.guild_id);
-	//	if (v && v->voiceclient && v->voiceclient->is_ready())
-	//	{
-	//		if (out.size() > 11520)
-	//		{
-	//			std::string packet(out.substr(0, 11520));
-	//			out.erase(out.begin(), out.begin() + 11520);
+		//	}
 
-	//			v->voiceclient->send_audio_raw((uint16_t*)packet.data(), packet.size());
+		//}
+		//if (out.size() > 0)
+		//{
+		//	std::cout << out << std::endl;
+		//}
 
-	//		}
-	//		else
-	//		{
-	//			try
-	//			{
-	//				v->voiceclient->send_audio_raw((uint16_t*)out.data(), out.size());
-	//			}
-	//			catch (std::exception& e)
-	//			{
-	//				std::cout << e.what() << std::endl;
-	//				out.clear();
-	//			}
-	//		}
-
-	//	}
-
-	//}
-	//if (out.size() > 0)
-	//{
-	//	std::cout << out << std::endl;
-	//}
-
-	//CloseHandle(hChildStdoutRd);
-	//CloseHandle(hChildStdinWr);
-	//CloseHandle(pi.hProcess);
-	//CloseHandle(pi.hThread);
-
+		//CloseHandle(hChildStdoutRd);
+		//CloseHandle(hChildStdinWr);
+		//CloseHandle(pi.hProcess);
+		//CloseHandle(pi.hThread);
+	}
 }
 
 void PlaybackHandler::Stop()
@@ -512,8 +593,7 @@ std::string PlaybackHandler::QueueString()
 				i.Name += "...";
 			}
 
-
-			int spaces = 50 - i.Name.size();
+			size_t spaces = 50 - i.Name.size();
 			result += i.Name + (spaces > 0 ? std::string(spaces, ' ') : "") + " ";
 
 			if (first)

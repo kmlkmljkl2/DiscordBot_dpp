@@ -12,7 +12,7 @@ class PlaybackHandler
 private:
 	const int reservedBytes = 11520;
 	bool Debugging = false;
-	bool EndlessLoop = true;
+	//bool EndlessLoop = true;
 
 	std::vector<YoutubeMusicObject> Queue;
 	dpp::snowflake TargetGuild;
@@ -25,19 +25,21 @@ private:
 	std::chrono::high_resolution_clock::time_point StartTime;
 	std::string GetName(std::string url);
 	void GetData(std::string url);
-	std::vector<uint16_t> AudioBuffer;
-	void StartAudio();
-	std::shared_mutex myMutex;
-	uint16_t* FfmpegBuffer = new uint16_t[reservedBytes];
-	uint16_t* VoiceBuffer = new uint16_t[reservedBytes];
+	//std::vector<uint16_t> AudioBuffer;
+	//void StartAudio();
+	//std::shared_mutex myMutex;
+	//uint16_t* FfmpegBuffer = new uint16_t[reservedBytes];
+	//uint16_t* VoiceBuffer = new uint16_t[11520];
 
 public:
 	double PlaybackDelay = 46.004;
 
 	PlaybackHandler(dpp::discord_client* client, dpp::snowflake guild);
 	~PlaybackHandler();
-	void Add(std::string url);
+	void Add(std::string url, bool playnow = false);
+	void PlayNow(std::string url);
 	void Remove(int index);
+	void Remove(int startIndex, int end);
 	void TryPlay();
 	void Stop();
 	void Pause();

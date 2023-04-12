@@ -13,14 +13,12 @@ void NotPhotonListener::Run()
 		try
 		{
 			Client.service();
-			//SLEEP(10);
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		catch (std::exception err)
 		{
-			std::cout << err.what() << std::endl;
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			Logger::LogError(err.what());
 		}
+		std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(10));
 	}
 	delete this;
 }
