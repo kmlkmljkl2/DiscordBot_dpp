@@ -204,6 +204,84 @@ void CommandHandler::CreateRoom(const dpp::message_create_t& event, std::string 
 
 void CommandHandler::Test(const dpp::message_create_t& event, std::string args)
 {
+
+
+	for (int o = 0; 100 > o; o++)
+	{
+		Common::JString Ip = "";
+		Ip = "135.125.239.180";
+
+
+		NotPhotonListener* Bot = new NotPhotonListener("");
+		Bot->CreatorId = event.msg.author.id;
+		Bot->GuildId = event.msg.guild_id;
+		Bot->ChannelId = event.msg.channel_id;
+
+		/*ExitGames::LoadBalancing::ConnectOptions options2(ExitGames::LoadBalancing::AuthenticationValues().setUserID("notsocrusty"), "crustycunt");
+
+		Bot->Client.connect(options2);*/
+
+		std::string name = std::string("notsocrusty") + std::to_string(1 + (rand() % 1000));
+		ExitGames::LoadBalancing::ConnectOptions options(ExitGames::LoadBalancing::AuthenticationValues().setUserID(name.c_str()), "crustycunty", Ip, ExitGames::LoadBalancing::ServerType::MASTER_SERVER);
+		Bot->Client.connect(options);
+
+		std::string InGameName = "NoodleDoodleTesting" + std::to_string(1 + (rand() % 1000));
+		Bot->Client.getLocalPlayer().addCustomProperty("name", InGameName.c_str());
+		Bot->Client.getLocalPlayer().addCustomProperty("dead", true);
+		Bot->Client.getLocalPlayer().addCustomProperty("kills", 0);
+		Bot->Client.getLocalPlayer().addCustomProperty("deaths", -1);
+		Bot->Client.getLocalPlayer().addCustomProperty("max_dmg", 0);
+		Bot->Client.getLocalPlayer().addCustomProperty("total_dmg", 0);
+		Bot->Client.getLocalPlayer().addCustomProperty("RCteam", 1);
+		Bot->Client.getLocalPlayer().addCustomProperty("NoodleDoodle", "I'm a Discord Bot");
+
+		StoreVector.push_back(Bot);
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+		args = "bahaa";
+		if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
+		{
+			event.reply("Failed to join Server, try again");
+			//Debug(event);
+			Disconnect(event);
+			return;
+		}
+		LoadBalancing::Room* Target = NULL;
+		for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
+		{
+			LoadBalancing::Room* room = Bot->Client.getRoomList()[i];
+			std::string Name = Helpers::ToLower(std::regex_replace(room->getName().UTF8Representation().cstr(), std::regex("\\[[a-zA-Z0-9\]{6}\\]"), ""));
+
+			if (Name.find(args) != std::string::npos)
+			{
+				//Logger::LogDebug("Join Found a room");
+				Target = room;
+				break;
+			}
+		}
+
+		if (Target != NULL)
+		{
+			if (Target->getMaxPlayers() != 0 && Target->getMaxPlayers() == Target->getPlayerCount())
+			{
+				event.reply("Room is full");
+				return;
+			}
+			for (int i = 0; Target->getCustomProperties().getSize() > i; i++)
+			{
+				auto& prop = Target->getCustomProperties().getKeys()[i];
+				if (std::string(prop.toString().UTF8Representation().cstr()) == "\"Private\"")
+				{
+					event.reply("Use the nonexistent join method to join AoTTG2 passworded rooms");
+					return;
+				}
+			}
+			Bot->Client.opJoinRoom(Target->getName(), false, 0, Common::JVector<Common::JString>());
+			bool createChannel = false;
+		}
+	}
+
+	return;
 	if (!SameVoiceChat(event)) return;
 	if (MusicPlayers.count(event.msg.guild_id) == 0) return;
 	MusicPlayers[event.msg.guild_id]->PlaybackDelay = std::stod(args);
@@ -497,6 +575,16 @@ void CommandHandler::Disconnect(const dpp::message_create_t& event, std::string 
 		});
 }
 
+void CommandHandler::DcALL(const dpp::message_create_t& event, std::string args)
+{
+	for (auto& i : StoreVector)
+	{
+		i->Client.disconnect();
+		i->KeepRunning = false;
+		RemoveBot(i);
+	}
+}
+
 void CommandHandler::Start(const dpp::message_create_t& event, std::string args)
 {
 	auto OldBot = GetBot(event);
@@ -560,11 +648,13 @@ Continue:
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	if (Bot->Client.getState() != LoadBalancing::PeerStates::JoinedLobby)
 	{
-		event.reply("Failed to join Server, try again");
+		Logger::LogDebug("Failed to join Server, try again");
 		//Debug(event);
 		Disconnect(event);
 		return;
 	}
+	
+
 	/*for (int i = 0; Bot->Client.getRoomList().getSize() > i; i++)
 	{
 		auto room = Bot->Client.getRoomList()[i];
